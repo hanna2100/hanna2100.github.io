@@ -1,7 +1,7 @@
 ---
-title: Text and Typography
-author: Cotes Chung
-date: 2019-08-08 11:33:00 +0800
+title: 테스트 한국어 폰트
+author: hanna2100
+date: 2021-01-04 11:33:00 +0800
 categories: [Blogging, Demo]
 tags: [typography]
 math: true
@@ -26,17 +26,11 @@ This post is to show Markdown syntax rendering on [**Chirpy**](https://github.co
 
 ## Paragraph
 
-I wandered lonely as a cloud
+살았으며, 찾아 인류의 바이며, 실로 발휘하기 광야에서 때문이다. 곧 위하여 불러 되는 아니다. 없으면 것이다.보라, 거선의 살 구할 생의 작고 같으며, 바이며, 말이다. 이것이야말로 수 같이 보이는 너의 공자는 예수는 것이다. 어디 사람은 길지 가치를 위하여서. 않는 바이며, 주며, 뜨고, 남는 능히 말이다. 투명하되 같은 때에, 있으랴? 그들에게 인간의 인생에 산야에 무엇을 그들에게 뜨거운지라, 따뜻한 뿐이다. 불어 이상은 작고 것이다. 꾸며 행복스럽고 노년에게서 위하여, 못하다 쓸쓸한 소리다.이것은 크고 쓸쓸하랴?
 
-That floats on high o'er vales and hills,
+그러므로 찾아 그들의 타오르고 피다. 얼마나 열매를 인생에 같으며, 얼음에 있으랴? 그와 현저하게 귀는 소담스러운 찾아다녀도, 것이다. 들어 일월과 품에 대한 못할 가는 사막이다. 품고 싹이 붙잡아 그들의 되려니와, 보배를 약동하다. 인간의 인간은 갑 청춘의 풀이 주는 우리 인생에 그들에게 철환하였는가? 천자만홍이 자신과 길을 발휘하기 피고, 그들에게 위하여 능히 공자는 보라. 예수는 인생에 찬미를 못할 군영과 것이다. 생명을 우리의 품고 간에 교향악이다. 우리 힘차게 가치를 노년에게서 지혜는 얼음이 동력은 그들을 사막이다.
 
-When all at once I saw a crowd,
-
-A host, of golden daffodils;
-
-Beside the lake, beneath the trees,
-
-Fluttering and dancing in the breeze.
+그것을 가치를 시들어 이상의 영원히 이성은 장식하는 힘있다. 봄바람을 커다란 방지하는 불러 피부가 청춘의 청춘 어디 넣는 위하여서. 가는 않는 대중을 가진 뭇 힘있다. 꽃이 모래뿐일 같으며, 그들의 사랑의 황금시대다. 대고, 무한한 주는 얼마나 들어 위하여서, 새가 눈에 우는 사막이다. 되려니와, 것은 열락의 되는 약동하다. 열락의 방지하는 풀이 때에, 이는 이것이다. 구하기 주는 이상은 우는 보라. 그것을 어디 만천하의 꽃 그들은 이것이다.
 
 ## Lists
 
