@@ -11,7 +11,7 @@
 @import "_colors/light-typography";
 @import "_colors/dark-typography";
 
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@1,700&family=Noto+Serif+KR&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Noto+Sans+KR:wght@300&display=swa');
 
 
 @mixin mode-toggle($dark-mode: false) {
@@ -55,7 +55,7 @@ body {
   background: var(--body-bg);
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
-  font-family: 'Lato', 'Noto Serif KR', serif;
+  font-family: 'Lato', 'Noto Sans KR', sans-serif;
 }
 
 /*--- sidebar layout ---*/
