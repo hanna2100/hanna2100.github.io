@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="kr"><!--
+ __  __                __                                     __
+/\ \/\ \              /\ \             __                    /\ \
+\ \ \_\ \   __  __    \_\ \      __   /\_\      __       ___ \ \ \/'\
+ \ \  _  \ /\ \/\ \   /'_` \   /'__`\ \/\ \   /'__`\    /'___\\ \ , <
+  \ \ \ \ \\ \ \_\ \ /\ \L\ \ /\  __/  \ \ \ /\ \L\.\_ /\ \__/ \ \ \\`\
+   \ \_\ \_\\/`____ \\ \___,_\\ \____\ _\ \ \\ \__/.\_\\ \____\ \ \_\ \_\
+    \/_/\/_/ `/___/> \\/__,_ / \/____//\ \_\ \\/__/\/_/ \/____/  \/_/\/_/
+                /\___/                \ \____/
+                \/__/                  \/___/
+
+Powered by Hydejack v9.0.4 <https://hydejack.com/>
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<head>
+  
+
+
+
+
+  <meta name="robots" content="noindex">
+
+
+
+  
+    
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1 | Dev Hanna</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1" />
+<meta name="author" content="hnr jang" />
+<meta property="og:locale" content="kr" />
+<meta name="description" content="Shimmer Loading Animation with Jetpack Compose" />
+<meta property="og:description" content="Shimmer Loading Animation with Jetpack Compose" />
+<link rel="canonical" href="https://hanna2100.github.io/android/2021-01-06-dev002/" />
+<meta property="og:url" content="https://hanna2100.github.io/android/2021-01-06-dev002/" />
+<meta property="og:site_name" content="Dev Hanna" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-06T00:00:00+09:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1" />
+<script type="application/ld+json">
+{"mainEntityOfPage":{"@type":"WebPage","@id":"https://hanna2100.github.io/android/2021-01-06-dev002/"},"@type":"BlogPosting","url":"https://hanna2100.github.io/android/2021-01-06-dev002/","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://hanna2100.github.io/assets/img/logo.png"},"name":"hnr jang"},"dateModified":"2021-01-09T22:50:25+09:00","datePublished":"2021-01-06T00:00:00+09:00","headline":"[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1","author":{"@type":"Person","name":"hnr jang"},"description":"Shimmer Loading Animation with Jetpack Compose","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+  
+    <meta name="keywords" content="안드로이드 개발자">
+  
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dev Hanna">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<meta name="application-name" content="Dev Hanna">
+
+
+  <meta name="theme-color" content="rgb(8,46,57)">
+
+
+<meta name="generator" content="Hydejack v9.0.4" />
+
+
+<link rel="alternate" href="https://hanna2100.github.io/android/2021-01-05-dev001/" hreflang="kr">
+
+<link type="application/atom+xml" rel="alternate" href="https://hanna2100.github.io/feed.xml" title="Dev Hanna" />
+
+
+<link rel="shortcut icon"    href="/assets/icons/favicon.ico">
+<link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+
+<link rel="manifest" href="/assets/site.webmanifest">
+
+
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+
+
+
+<link rel="preload" href="/assets/img/swipe.svg" as="image" id="_hrefSwipeSVG">
+
+
+  
+  <link rel="dns-prefetch" href="/assets/bower_components/katex/dist/katex.min.css" id="_katexPreload">
+  <noscript><link rel="stylesheet" href="/assets/bower_components/katex/dist/katex.min.css"></noscript>
+
+
+
+
+
+<script>!function(e,t){"use strict";function n(e,t,n,o){e.addEventListener?e.addEventListener(t,n,o):e.attachEvent?e.attachEvent("on"+t,n):e["on"+t]=n}e.loadJS=function(e,o){var r=t.createElement("script");r.src=e,o&&n(r,"load",o,{once:!0});var a=t.scripts[0];return a.parentNode.insertBefore(r,a),r},e._loaded=!1,e.loadJSDeferred=function(o,r){function a(){e._loaded=!0,r&&n(c,"load",r,{once:!0});var o=t.scripts[0];o.parentNode.insertBefore(c,o)}var c=t.createElement("script");return c.src=o,e._loaded?a():n(e,"load",a,{once:!0}),c},e.setRel=e.setRelStylesheet=function(e){function o(){this.rel="stylesheet"}n(t.getElementById(e),"load",o,{once:!0})}}(window,document);
+!function(a){"use strict";var b=function(b,c,d){function e(a){return h.body?a():void setTimeout(function(){e(a)})}function f(){i.addEventListener&&i.removeEventListener("load",f),i.media=d||"all"}var g,h=a.document,i=h.createElement("link");if(c)g=c;else{var j=(h.body||h.getElementsByTagName("head")[0]).childNodes;g=j[j.length-1]}var k=h.styleSheets;i.rel="stylesheet",i.href=b,i.media="only x",e(function(){g.parentNode.insertBefore(i,c?g:g.nextSibling)});var l=function(a){for(var b=i.href,c=k.length;c--;)if(k[c].href===b)return a();setTimeout(function(){l(a)})};return i.addEventListener&&i.addEventListener("load",f),i.onloadcssdefined=l,l(f),i};"undefined"!=typeof exports?exports.loadCSS=b:a.loadCSS=b}("undefined"!=typeof global?global:this);
+!function(a){if(a.loadCSS){var b=loadCSS.relpreload={};if(b.support=function(){try{return a.document.createElement("link").relList.supports("preload")}catch(b){return!1}},b.poly=function(){for(var b=a.document.getElementsByTagName("link"),c=0;c<b.length;c++){var d=b[c];"preload"===d.rel&&"style"===d.getAttribute("as")&&(a.loadCSS(d.href,d,d.getAttribute("media")),d.rel=null)}},!b.support()){b.poly();var c=a.setInterval(b.poly,300);a.addEventListener&&a.addEventListener("load",function(){b.poly(),a.clearInterval(c)}),a.attachEvent&&a.attachEvent("onload",function(){a.clearInterval(c)})}}}(this);
+!function(w) {
+  w._baseURL = '/';
+  w._publicPath = '/assets/js/';
+  w._noPushState = false;
+  w._noDrawer = false;
+  w._noNavbar = false;
+  w._noToc = false;
+  w._noSearch = false;
+}(window);
+</script>
+
+
+
+<!--[if gt IE 8]><!---->
+
+  
+
+
+
+
+<link rel="stylesheet" href="/assets/css/hydejack-9.0.4.css" id="_stylePreload">
+<link rel="stylesheet" href="/assets/icomoon/style.css" id="_iconsPreload">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Slab:700%7CNoto+Sans:400,400i,700,700i&display=swap" id="_fontsPreload">
+
+
+
+  <style id="_pageStyle">
+
+html{--accent-color: rgb(79,177,186);--accent-color-faded: rgba(79,177,186,0.5);--accent-color-darkened: #409ba3;--theme-color: rgb(8,46,57)}
+
+</style>
+
+
+<!--<![endif]-->
+
+
+<!--
+Code used for embedding Gumroad on the Hydejack Site. 
+Left here for reference, feel free to delete.
+-->
+<link rel="dns-prefetch" href="https://assets.gumroad.com">
+<script type="module">
+  let p;
+  const promisify = f => x => new Promise(r => f(x).addEventListener('load', r));
+  const loadJS = promisify(window.loadJS);
+  document.querySelector('hy-push-state').addEventListener('load', () => {
+    const io = new IntersectionObserver(async (entries) => {
+      if (entries.some(x => x.isIntersecting)) {
+        p = p || loadJS('https://gumroad.com/js/gumroad-embed.js');
+        await p;
+        if (!window.GumroadEmbed) {
+          await new Promise(function check1(res) {
+            if ('createGumroadEmbed' in window) res(window.createGumroadEmbed());
+            else setTimeout(() => check1(res), 200);
+          });
+        }
+        await new Promise(function check2(res) {
+          if ('GumroadEmbed' in window) res(GumroadEmbed.reload());
+          else setTimeout(() => check2(res), 200);
+        });
+      }
+    }, { rootMargin: '1440px' });
+    document.querySelectorAll('.gumroad-product-embed').forEach(el => io.observe(el));
+  });
+</script>
+<script type="module">
+  let p;
+  const promisify = f => x => new Promise(r => f(x).addEventListener('load', r));
+  const loadJS = promisify(window.loadJS);
+  document.querySelector('hy-push-state').addEventListener('load', () => {
+    const io = new IntersectionObserver(async (entries) => {
+      if (entries.some(x => x.isIntersecting)) {
+        p = p || loadJS('https://gumroad.com/js/gumroad.js');
+        await p;
+        if (!window.GumroadOverlay) {
+          await new Promise(function check(res) {
+            if ('createGumroadOverlay' in window) res(window.createGumroadOverlay());
+            else setTimeout(() => check(res), 200);
+          });
+        }
+      }
+    }, { rootMargin: '300px' });
+    document.querySelectorAll('.gumroad-button').forEach(el => io.observe(el));
+  });
+</script>
+
+
+</head>
+
+<body class="no-break-layout no-large-headings">
+  
+
+
+<hy-push-state
+  id="_pushState"
+  replace-selector="#_main"
+  link-selector="a[href]:not([href^='/assets/']):not(.external):not(.no-push-state)"
+  script-selector="script"
+  duration="500"
+  hashchange
+>
+  
+  <div id="_navbar" class="navbar fixed-top">
+  <div class="content">
+    <span class="sr-only">Jump to:</span>
+    <div class="nav-btn-bar">
+      <a id="_menu" class="nav-btn no-hover" href="#_drawer--opened">
+        <span class="sr-only">Navigation</span>
+        <span class="icon-menu"></span>
+      </a>
+      <div class="nav-span"></div>
+    </div>
+  </div>
+</div>
+<hr class="sr-only" hidden />
+
+  <main
+  id="_main"
+  class="content layout-page"
+  role="main"
+>
+  <article class="page" role="article">
+  <header>
+    <h1 class="page-title">[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1</h1>
+    
+
+
+
+  
+    <div class="hr pb0"></div>
+  
+
+
+  </header>
+
+  <p><a href="https://youtu.be/LfXvDaDEYSI">Shimmer Loading Animation with Jetpack Compose</a> 강의를 듣고 정리한 내용입니다.</p>
+
+<h2 id="buildgradle">build.gradle</h2>
+<hr />
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">dependencies</span> <span class="p">{</span>
+    <span class="o">..</span><span class="p">.</span>
+    <span class="n">def</span> <span class="n">compose</span> <span class="p">=</span> <span class="s">"1.0.0-alpha09"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.ui:ui-tooling:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.ui:ui:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.foundation:foundation:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.runtime:runtime-livedata:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.runtime:runtime-rxjava2:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.material:material:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.material:material-icons-core:$compose"</span>
+    <span class="n">implementation</span> <span class="s">"androidx.compose.material:material-icons-extended:$compose"</span>
+    <span class="n">androidTestImplementation</span> <span class="s">"androidx.ui:ui-test:$compose"</span>
+    <span class="o">..</span><span class="p">.</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Jetpack Compose 1.0.0-alpha09 버전 사용</p>
+
+<h2 id="demo-맛보기">Demo 맛보기</h2>
+<hr />
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Composable</span>
+<span class="k">fun</span> <span class="nf">GradientDemo</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">colors</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+        <span class="nc">Color</span><span class="p">.</span><span class="nc">Blue</span><span class="p">,</span>
+        <span class="nc">Color</span><span class="p">.</span><span class="nc">Red</span><span class="p">,</span>
+        <span class="nc">Color</span><span class="p">.</span><span class="nc">Blue</span>
+    <span class="p">)</span>
+    <span class="kd">val</span> <span class="py">brush</span> <span class="p">=</span> <span class="nc">Brush</span><span class="p">.</span><span class="nf">linearGradient</span><span class="p">(</span>
+        <span class="n">colors</span><span class="p">,</span>
+        <span class="n">start</span> <span class="p">=</span> <span class="nc">Offset</span><span class="p">(</span><span class="mf">200f</span><span class="p">,</span> <span class="mf">200f</span><span class="p">),</span>
+        <span class="n">end</span> <span class="p">=</span> <span class="nc">Offset</span><span class="p">(</span><span class="mf">400f</span><span class="p">,</span> <span class="mf">400f</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="nc">Surface</span><span class="p">(</span>
+        <span class="n">shape</span> <span class="p">=</span> <span class="nc">MaterialTheme</span><span class="p">.</span><span class="n">shapes</span><span class="p">.</span><span class="n">small</span>
+    <span class="p">)</span> <span class="p">{</span>
+        <span class="nc">Spacer</span><span class="p">(</span>
+            <span class="n">modifier</span> <span class="p">=</span> <span class="nc">Modifier</span>
+            <span class="p">.</span><span class="nf">fillMaxSize</span><span class="p">()</span>
+            <span class="p">.</span><span class="nf">background</span><span class="p">(</span><span class="n">brush</span> <span class="p">=</span> <span class="n">brush</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p><img src="/assets/img/posts/dev002_01.jpg" class="aligncenter" width="40%" height="40%" /></p>
+<ul>
+  <li>colors: 그래디언트로 표현할 색상.</li>
+  <li>brush: 그래디언트 방향.
+    <ul>
+      <li>linearGradient: 사선</li>
+      <li>horizontalGradient: 수평</li>
+      <li>verticalGradient: 수직</li>
+      <li>radialGradient: 방사형 원형</li>
+      <li>sweepGradient: 동그랗게 쓸어낸 형태(?) <del>말로는 설명이 어렵다.</del></li>
+    </ul>
+  </li>
+  <li>brush의 start, end
+    <ul>
+      <li>왼쪽 상단 모서리부터 좌표계가 시작한다고 보면 된다.</li>
+      <li>start의 Offset(200f, 200f)은 x = 200f, y = 200f 뜻한다.</li>
+      <li>end의 Offset은 x = 400f, y = 400f 이므로 start와 end를 합하면 사진과 같은 좌표계가 구성되고 해당영역을 기준으로 배경에 brush가 칠해진다.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="practice">Practice</h2>
+<hr />
+<h3 id="그래디언트-생성">그래디언트 생성</h3>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">override</span> <span class="k">fun</span> <span class="nf">onCreateView</span><span class="p">(</span>
+    <span class="n">inflater</span><span class="p">:</span> <span class="nc">LayoutInflater</span><span class="p">,</span>
+    <span class="n">container</span><span class="p">:</span> <span class="nc">ViewGroup</span><span class="p">?,</span>
+    <span class="n">savedInstanceState</span><span class="p">:</span> <span class="nc">Bundle</span><span class="p">?</span>
+<span class="p">):</span> <span class="nc">View</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nc">ComposeView</span><span class="p">(</span><span class="nf">requireContext</span><span class="p">()).</span><span class="nf">apply</span> <span class="p">{</span>
+        <span class="nf">setContent</span> <span class="p">{</span>
+            <span class="nc">ShimmerRecipeCardItem</span><span class="p">(</span>
+                <span class="n">colors</span> <span class="p">=</span> <span class="nf">listOf</span><span class="p">(</span>
+                    <span class="nc">Color</span><span class="p">.</span><span class="nc">LightGray</span><span class="p">.</span><span class="nf">copy</span><span class="p">(</span><span class="n">alpha</span> <span class="p">=</span> <span class="mf">0.9f</span><span class="p">),</span>
+                    <span class="nc">Color</span><span class="p">.</span><span class="nc">LightGray</span><span class="p">.</span><span class="nf">copy</span><span class="p">(</span><span class="n">alpha</span> <span class="p">=</span> <span class="mf">0.2f</span><span class="p">),</span>
+                    <span class="nc">Color</span><span class="p">.</span><span class="nc">LightGray</span><span class="p">.</span><span class="nf">copy</span><span class="p">(</span><span class="n">alpha</span> <span class="p">=</span> <span class="mf">0.9f</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">cardHeight</span> <span class="p">=</span> <span class="mi">250</span><span class="p">.</span><span class="n">dp</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nd">@Composable</span>
+<span class="k">fun</span> <span class="nf">ShimmerRecipeCardItem</span><span class="p">(</span>
+        <span class="n">colors</span><span class="p">:</span> <span class="nc">List</span><span class="p">&lt;</span><span class="nc">Color</span><span class="p">&gt;,</span>
+        <span class="n">cardHeight</span><span class="p">:</span> <span class="nc">Dp</span><span class="p">,</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="kd">val</span> <span class="py">brush</span> <span class="p">=</span> <span class="nc">Brush</span><span class="p">.</span><span class="nf">linearGradient</span><span class="p">(</span>
+        <span class="n">colors</span><span class="p">,</span>
+        <span class="n">start</span> <span class="p">=</span> <span class="nc">Offset</span><span class="p">(</span><span class="mf">200f</span><span class="p">,</span> <span class="mf">200f</span><span class="p">),</span>
+        <span class="n">end</span> <span class="p">=</span> <span class="nc">Offset</span><span class="p">(</span><span class="mf">400f</span><span class="p">,</span> <span class="mf">400f</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="nc">Surface</span><span class="p">(</span>
+        <span class="n">shape</span> <span class="p">=</span> <span class="nc">MaterialTheme</span><span class="p">.</span><span class="n">shapes</span><span class="p">.</span><span class="n">small</span>
+    <span class="p">)</span> <span class="p">{</span>
+        <span class="nc">Spacer</span><span class="p">(</span>
+            <span class="n">modifier</span> <span class="p">=</span> <span class="nc">Modifier</span>
+                <span class="p">.</span><span class="nf">fillMaxWidth</span><span class="p">()</span>
+                <span class="p">.</span><span class="nf">preferredHeight</span><span class="p">(</span><span class="n">cardHeight</span><span class="p">)</span>
+                <span class="p">.</span><span class="nf">background</span><span class="p">(</span><span class="n">brush</span> <span class="p">=</span> <span class="n">brush</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p><img src="/assets/img/posts/dev002_02.jpg" class="aligncenter" width="40%" height="40%" />
+자 이제 레시피 Item에 그래디언트를 적용해보자. 
+ShimmerRecipeCardItem 함수를 만들어 그래디언트 색상과 아이템 높이를 인자로 받고, 해당역역을 brush로 칠해주는 Composable를 만들었다.&lt;/br&gt;
+색상은 aplpha값을 넣어 투명도를 조절했다. 그럭저럭 형태는 갖춰졌으니 이제 애니메이션이 필요하다.</p>
+
+<h3 id="애니메이션-정의">애니메이션 정의</h3>
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">ShimmerAnimationDefinition</span><span class="p">(</span>
+    <span class="kd">val</span> <span class="py">widthPx</span><span class="p">:</span> <span class="nc">Float</span><span class="p">,</span>
+    <span class="kd">val</span> <span class="py">heightPx</span><span class="p">:</span> <span class="nc">Float</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="k">enum</span> <span class="kd">class</span> <span class="nc">AnimationState</span> <span class="p">{</span>
+        <span class="nc">START</span><span class="p">,</span> <span class="nc">END</span>
+    <span class="p">}</span>
+    <span class="kd">val</span> <span class="py">xShimmerPropKey</span> <span class="p">=</span> <span class="nc">FloatPropKey</span><span class="p">(</span><span class="s">"xShimmer"</span><span class="p">)</span>
+    <span class="kd">val</span> <span class="py">yShimmerPropKey</span> <span class="p">=</span> <span class="nc">FloatPropKey</span><span class="p">(</span><span class="s">"yShimmer"</span><span class="p">)</span>
+
+    <span class="kd">val</span> <span class="py">shimmerTransitionDefinition</span> <span class="p">=</span> <span class="n">transitionDefinition</span><span class="p">&lt;</span><span class="nc">AnimationState</span><span class="p">&gt;</span> <span class="p">{</span>
+        <span class="nf">state</span><span class="p">(</span><span class="nc">START</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">[</span><span class="n">xShimmerPropKey</span><span class="p">]</span> <span class="p">=</span> <span class="mf">0f</span>
+          <span class="k">this</span><span class="p">[</span><span class="n">yShimmerPropKey</span><span class="p">]</span> <span class="p">=</span> <span class="mf">0f</span>
+        <span class="p">}</span>
+        <span class="nf">state</span><span class="p">(</span><span class="nc">END</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">[</span><span class="n">xShimmerPropKey</span><span class="p">]</span> <span class="p">=</span> <span class="n">widthPx</span>
+          <span class="k">this</span><span class="p">[</span><span class="n">yShimmerPropKey</span><span class="p">]</span> <span class="p">=</span> <span class="n">heightPx</span>
+        <span class="p">}</span>
+
+        <span class="nf">transition</span><span class="p">(</span><span class="nc">START</span><span class="p">,</span> <span class="nc">END</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">xShimmerPropKey</span> <span class="n">using</span> <span class="nf">infiniteRepeatable</span><span class="p">(</span>
+                <span class="n">animation</span> <span class="p">=</span> <span class="nf">tween</span><span class="p">(</span>
+                    <span class="n">durationMillis</span> <span class="p">=</span> <span class="mi">1300</span><span class="p">,</span>
+                    <span class="n">delayMillis</span> <span class="p">=</span> <span class="mi">300</span><span class="p">,</span>
+                    <span class="n">easing</span> <span class="p">=</span> <span class="nc">LinearEasing</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">yShimmerPropKey</span> <span class="n">using</span> <span class="nf">infiniteRepeatable</span><span class="p">(</span>
+                <span class="n">animation</span> <span class="p">=</span> <span class="nf">tween</span><span class="p">(</span>
+                    <span class="n">durationMillis</span> <span class="p">=</span> <span class="mi">1300</span><span class="p">,</span>
+                    <span class="n">delayMillis</span> <span class="p">=</span> <span class="mi">300</span><span class="p">,</span>
+                    <span class="n">easing</span> <span class="p">=</span> <span class="nc">LinearEasing</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>ShimmerAnimationDefinition을 정의한다. 모든 애니메이션은 enum class를 활용하여 상태값을 정의한다.
+최소값은 0f인데 최대값을 모르므로  파라미터를 받도록 하자. 파라미터를 Dp가 아닌 Float으로 받는 이유는 PropKey도 Float이기 때문이다(계산편의성).
+애니메이션 적용에 관한부분은 다음 포스팅에서 이어서 할 예정이다.</p>
+
+  
+
+</article>
+
+  
+<footer class="content" role="contentinfo">
+  <hr/>
+  
+    <p><small class="copyright">Hanna2100 © 2021. All rights reserved.
+</small></p>
+  
+  
+    <p><small>Powered by <a class="external" href="https://hydejack.com/">Hydejack</a> v<span id="_version">9.0.4</span></small></p>
+  <hr class="sr-only"/>
+</footer>
+
+
+</main>
+
+  <hy-drawer
+  id="_drawer"
+  class=""
+  side="left"
+  threshold="10"
+  noscroll
+  
+>
+  <header id="_sidebar" class="sidebar" role="banner">
+    
+
+
+
+
+<div class="sidebar-bg sidebar-overlay" style="background-color:rgb(8,46,57);background-image:url(/assets/img/sidebar-bg.jpg)"></div>
+
+    <div class="sidebar-sticky">
+  <div class="sidebar-about">
+    
+      <a class="no-hover" href="/" tabindex="-1">
+        <img src="/assets/img/logo.png" class="avatar" alt="Dev Hanna" width="120" height="120" loading="lazy" />
+      </a>
+    
+    <a class="sidebar-title" href="/"><h2 class="h1">Dev Hanna</h2></a>
+    
+    
+      <p class="">
+        초급 Android 개발자 입니다.
+
+      </p>
+    
+  </div>
+
+  <nav class="sidebar-nav heading" role="navigation">
+    <span class="sr-only">Navigation:</span>
+<ul>
+  
+    
+      
+      <li>
+        <a
+          id="_drawer--opened"
+          href="/profile/"
+          class="sidebar-nav-item"
+          
+        >
+          Profile
+        </a>
+      </li>
+    
+      
+      <li>
+        <a
+          
+          href="/daily_life/"
+          class="sidebar-nav-item"
+          
+        >
+          Daily life
+        </a>
+      </li>
+    
+      
+      <li>
+        <a
+          
+          href="/android/"
+          class="sidebar-nav-item"
+          
+        >
+          Android
+        </a>
+      </li>
+    
+  
+</ul>
+
+  </nav>
+
+  
+  <div class="sidebar-social">
+    <span class="sr-only">Social:</span>
+<ul>
+  
+    
+      
+
+
+
+  
+
+  
+  
+  
+  
+
+  
+
+  
+
+  <li>
+    <a href="https://github.com/hanna2100" title="GitHub" class="no-mark-external">
+      <span class="icon-github"></span>
+      <span class="sr-only">GitHub</span>
+    </a>
+  </li>
+
+
+    
+      
+
+
+
+  
+
+  
+  
+  
+  
+
+  
+
+  
+
+  <li>
+    <a href="mailto:hanna0497@naver.com" title="Email" class="no-mark-external">
+      <span class="icon-mail"></span>
+      <span class="sr-only">Email</span>
+    </a>
+  </li>
+
+
+    
+  
+</ul>
+
+  </div>
+</div>
+  </header>
+</hy-drawer>
+<hr class="sr-only" hidden />
+
+</hy-push-state>
+
+
+  <!--[if gt IE 10]><!---->
+  <script nomodule>!function(){var e=document.createElement("script");if(!("noModule"in e)&&"onbeforeload"in e){var t=!1;document.addEventListener("beforeload",function(n){if(n.target===e)t=!0;else if(!n.target.hasAttribute("nomodule")||!t)return;n.preventDefault()},!0),e.type="module",e.src=".",document.head.appendChild(e),e.remove()}}();
+</script>
+  <script src="/assets/js/hydejack-9.0.4.js" type="module"></script>
+  <script src="/assets/js/LEGACY-hydejack-9.0.4.js" nomodule defer></script>
+  
+
+  
+
+<!--<![endif]-->
+  <!--
+Code for integrating CloudFlare's email protection with Hydejack's single page app loading.
+-->
+<script>
+  document.getElementById('_pushState').addEventListener('hy-push-state-after', function (e) {
+    function e(e){
+      (console.error?console.error:console.log).call(console,e)
+    }
+
+    function t(e){
+      return l.innerHTML='<a href="'+e.replace(/"/g,"&quot;")+'"></a>',l.childNodes[0].getAttribute("href")
+    }
+
+    function r(e,t){
+      var r=e.substr(t,2);return parseInt(r,16)
+    }
+
+    function n(e,n){
+      for(var o="",c=r(e,n),a=n+2;a<e.length;a+=2){
+        var l=r(e,a)^c;
+        o+=String.fromCharCode(l)
+      }
+      return t(o)
+    }
+
+    var o="/cdn-cgi/l/email-protection#",
+        c=".__cf_email__",
+        a="data-cfemail",
+        l=document.createElement("div");
+
+    !function(){
+      for(var t=document.getElementsByTagName("a"),r=0;r<t.length;r++)
+        try{
+          var c=t[r],a=c.href.indexOf(o);
+          a>-1&&(c.href="mailto:"+n(c.href,a+o.length))
+        }catch(t){
+          e(t)
+        }
+    }(),
+    function(){
+      for(var t=document.querySelectorAll(c),r=0;r<t.length;r++)
+        try{
+          var o=t[r],l=n(o.getAttribute(a),0),i=document.createTextNode(l);
+          o.parentNode.replaceChild(i,o)
+        }catch(t){
+          e(t)
+        }
+    }()
+  });
+</script>
+
+
+
+
+
+<div hidden>
+  
+  <h2 class="sr-only">Templates (for web app):</h2>
+
+  <template id="_animation-template">
+  <div class="animation-main fixed-top">
+    <div class="content">
+      <div class="page"></div>
+    </div>
+  </div>
+</template>
+
+  <template id="_loading-template">
+  <div class="loading nav-btn fr">
+    <span class="sr-only">Loading…</span>
+    <span class="icon-cog"></span>
+  </div>
+</template>
+
+  <template id="_error-template">
+  <div class="page">
+    <h1 class="page-title">Error</h1>
+    
+    
+    <p class="lead">
+      Sorry, an error occurred while loading <a class="this-link" href=""></a>.
+
+    </p>
+  </div>
+</template>
+
+  <template id="_forward-template">
+  <button id="_forward" class="forward nav-btn no-hover">
+    <span class="sr-only">Forward</span>
+    <span class="icon-arrow-right2"></span>
+  </button>
+</template>
+
+  <template id="_back-template">
+  <button id="_back" class="back nav-btn no-hover">
+    <span class="sr-only">Back</span>
+    <span class="icon-arrow-left2"></span>
+  </button>
+</template>
+
+  <template id="_permalink-template">
+  <a href="#" class="permalink">
+    <span class="sr-only">Permalink</span>
+    <span class="content-hash"></span>
+  </a>
+</template>
+
+</div>
+
+
+</body>
+</html>

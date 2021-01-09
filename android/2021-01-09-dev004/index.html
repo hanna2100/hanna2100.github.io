@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="kr"><!--
+ __  __                __                                     __
+/\ \/\ \              /\ \             __                    /\ \
+\ \ \_\ \   __  __    \_\ \      __   /\_\      __       ___ \ \ \/'\
+ \ \  _  \ /\ \/\ \   /'_` \   /'__`\ \/\ \   /'__`\    /'___\\ \ , <
+  \ \ \ \ \\ \ \_\ \ /\ \L\ \ /\  __/  \ \ \ /\ \L\.\_ /\ \__/ \ \ \\`\
+   \ \_\ \_\\/`____ \\ \___,_\\ \____\ _\ \ \\ \__/.\_\\ \____\ \ \_\ \_\
+    \/_/\/_/ `/___/> \\/__,_ / \/____//\ \_\ \\/__/\/_/ \/____/  \/_/\/_/
+                /\___/                \ \____/
+                \/__/                  \/___/
+
+Powered by Hydejack v9.0.4 <https://hydejack.com/>
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<head>
+  
+
+
+
+
+  <meta name="robots" content="noindex">
+
+
+
+  
+    
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>[번역] 안드로이드의 Context란 무엇인가? | Dev Hanna</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="[번역] 안드로이드의 Context란 무엇인가?" />
+<meta name="author" content="hnr jang" />
+<meta property="og:locale" content="kr" />
+<meta name="description" content="Context와 메모리누수에 관한 이야기" />
+<meta property="og:description" content="Context와 메모리누수에 관한 이야기" />
+<link rel="canonical" href="https://hanna2100.github.io/android/2021-01-09-dev004/" />
+<meta property="og:url" content="https://hanna2100.github.io/android/2021-01-09-dev004/" />
+<meta property="og:site_name" content="Dev Hanna" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-09T00:00:00+09:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[번역] 안드로이드의 Context란 무엇인가?" />
+<script type="application/ld+json">
+{"mainEntityOfPage":{"@type":"WebPage","@id":"https://hanna2100.github.io/android/2021-01-09-dev004/"},"@type":"BlogPosting","url":"https://hanna2100.github.io/android/2021-01-09-dev004/","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://hanna2100.github.io/assets/img/logo.png"},"name":"hnr jang"},"dateModified":"2021-01-09T22:50:25+09:00","datePublished":"2021-01-09T00:00:00+09:00","headline":"[번역] 안드로이드의 Context란 무엇인가?","author":{"@type":"Person","name":"hnr jang"},"description":"Context와 메모리누수에 관한 이야기","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  
+
+  
+    <meta name="keywords" content="안드로이드 개발자">
+  
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dev Hanna">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<meta name="application-name" content="Dev Hanna">
+
+
+  <meta name="theme-color" content="rgb(8,46,57)">
+
+
+<meta name="generator" content="Hydejack v9.0.4" />
+
+
+<link rel="alternate" href="https://hanna2100.github.io/android/2021-01-05-dev001/" hreflang="kr">
+
+<link type="application/atom+xml" rel="alternate" href="https://hanna2100.github.io/feed.xml" title="Dev Hanna" />
+
+
+<link rel="shortcut icon"    href="/assets/icons/favicon.ico">
+<link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+
+<link rel="manifest" href="/assets/site.webmanifest">
+
+
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+
+
+
+<link rel="preload" href="/assets/img/swipe.svg" as="image" id="_hrefSwipeSVG">
+
+
+  
+  <link rel="dns-prefetch" href="/assets/bower_components/katex/dist/katex.min.css" id="_katexPreload">
+  <noscript><link rel="stylesheet" href="/assets/bower_components/katex/dist/katex.min.css"></noscript>
+
+
+
+
+
+<script>!function(e,t){"use strict";function n(e,t,n,o){e.addEventListener?e.addEventListener(t,n,o):e.attachEvent?e.attachEvent("on"+t,n):e["on"+t]=n}e.loadJS=function(e,o){var r=t.createElement("script");r.src=e,o&&n(r,"load",o,{once:!0});var a=t.scripts[0];return a.parentNode.insertBefore(r,a),r},e._loaded=!1,e.loadJSDeferred=function(o,r){function a(){e._loaded=!0,r&&n(c,"load",r,{once:!0});var o=t.scripts[0];o.parentNode.insertBefore(c,o)}var c=t.createElement("script");return c.src=o,e._loaded?a():n(e,"load",a,{once:!0}),c},e.setRel=e.setRelStylesheet=function(e){function o(){this.rel="stylesheet"}n(t.getElementById(e),"load",o,{once:!0})}}(window,document);
+!function(a){"use strict";var b=function(b,c,d){function e(a){return h.body?a():void setTimeout(function(){e(a)})}function f(){i.addEventListener&&i.removeEventListener("load",f),i.media=d||"all"}var g,h=a.document,i=h.createElement("link");if(c)g=c;else{var j=(h.body||h.getElementsByTagName("head")[0]).childNodes;g=j[j.length-1]}var k=h.styleSheets;i.rel="stylesheet",i.href=b,i.media="only x",e(function(){g.parentNode.insertBefore(i,c?g:g.nextSibling)});var l=function(a){for(var b=i.href,c=k.length;c--;)if(k[c].href===b)return a();setTimeout(function(){l(a)})};return i.addEventListener&&i.addEventListener("load",f),i.onloadcssdefined=l,l(f),i};"undefined"!=typeof exports?exports.loadCSS=b:a.loadCSS=b}("undefined"!=typeof global?global:this);
+!function(a){if(a.loadCSS){var b=loadCSS.relpreload={};if(b.support=function(){try{return a.document.createElement("link").relList.supports("preload")}catch(b){return!1}},b.poly=function(){for(var b=a.document.getElementsByTagName("link"),c=0;c<b.length;c++){var d=b[c];"preload"===d.rel&&"style"===d.getAttribute("as")&&(a.loadCSS(d.href,d,d.getAttribute("media")),d.rel=null)}},!b.support()){b.poly();var c=a.setInterval(b.poly,300);a.addEventListener&&a.addEventListener("load",function(){b.poly(),a.clearInterval(c)}),a.attachEvent&&a.attachEvent("onload",function(){a.clearInterval(c)})}}}(this);
+!function(w) {
+  w._baseURL = '/';
+  w._publicPath = '/assets/js/';
+  w._noPushState = false;
+  w._noDrawer = false;
+  w._noNavbar = false;
+  w._noToc = false;
+  w._noSearch = false;
+}(window);
+</script>
+
+
+
+<!--[if gt IE 8]><!---->
+
+  
+
+
+
+
+<link rel="stylesheet" href="/assets/css/hydejack-9.0.4.css" id="_stylePreload">
+<link rel="stylesheet" href="/assets/icomoon/style.css" id="_iconsPreload">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Slab:700%7CNoto+Sans:400,400i,700,700i&display=swap" id="_fontsPreload">
+
+
+
+  <style id="_pageStyle">
+
+html{--accent-color: rgb(79,177,186);--accent-color-faded: rgba(79,177,186,0.5);--accent-color-darkened: #409ba3;--theme-color: rgb(8,46,57)}
+
+</style>
+
+
+<!--<![endif]-->
+
+
+<!--
+Code used for embedding Gumroad on the Hydejack Site. 
+Left here for reference, feel free to delete.
+-->
+<link rel="dns-prefetch" href="https://assets.gumroad.com">
+<script type="module">
+  let p;
+  const promisify = f => x => new Promise(r => f(x).addEventListener('load', r));
+  const loadJS = promisify(window.loadJS);
+  document.querySelector('hy-push-state').addEventListener('load', () => {
+    const io = new IntersectionObserver(async (entries) => {
+      if (entries.some(x => x.isIntersecting)) {
+        p = p || loadJS('https://gumroad.com/js/gumroad-embed.js');
+        await p;
+        if (!window.GumroadEmbed) {
+          await new Promise(function check1(res) {
+            if ('createGumroadEmbed' in window) res(window.createGumroadEmbed());
+            else setTimeout(() => check1(res), 200);
+          });
+        }
+        await new Promise(function check2(res) {
+          if ('GumroadEmbed' in window) res(GumroadEmbed.reload());
+          else setTimeout(() => check2(res), 200);
+        });
+      }
+    }, { rootMargin: '1440px' });
+    document.querySelectorAll('.gumroad-product-embed').forEach(el => io.observe(el));
+  });
+</script>
+<script type="module">
+  let p;
+  const promisify = f => x => new Promise(r => f(x).addEventListener('load', r));
+  const loadJS = promisify(window.loadJS);
+  document.querySelector('hy-push-state').addEventListener('load', () => {
+    const io = new IntersectionObserver(async (entries) => {
+      if (entries.some(x => x.isIntersecting)) {
+        p = p || loadJS('https://gumroad.com/js/gumroad.js');
+        await p;
+        if (!window.GumroadOverlay) {
+          await new Promise(function check(res) {
+            if ('createGumroadOverlay' in window) res(window.createGumroadOverlay());
+            else setTimeout(() => check(res), 200);
+          });
+        }
+      }
+    }, { rootMargin: '300px' });
+    document.querySelectorAll('.gumroad-button').forEach(el => io.observe(el));
+  });
+</script>
+
+
+</head>
+
+<body class="no-break-layout no-large-headings">
+  
+
+
+<hy-push-state
+  id="_pushState"
+  replace-selector="#_main"
+  link-selector="a[href]:not([href^='/assets/']):not(.external):not(.no-push-state)"
+  script-selector="script"
+  duration="500"
+  hashchange
+>
+  
+  <div id="_navbar" class="navbar fixed-top">
+  <div class="content">
+    <span class="sr-only">Jump to:</span>
+    <div class="nav-btn-bar">
+      <a id="_menu" class="nav-btn no-hover" href="#_drawer--opened">
+        <span class="sr-only">Navigation</span>
+        <span class="icon-menu"></span>
+      </a>
+      <div class="nav-span"></div>
+    </div>
+  </div>
+</div>
+<hr class="sr-only" hidden />
+
+  <main
+  id="_main"
+  class="content layout-page"
+  role="main"
+>
+  <article class="page" role="article">
+  <header>
+    <h1 class="page-title">[번역] 안드로이드의 Context란 무엇인가?</h1>
+    
+
+
+
+  
+    <div class="hr pb0"></div>
+  
+
+
+  </header>
+
+  <p><a href="https://medium.com/swlh/context-and-memory-leaks-in-android-82a39ed33002">Context and memory leaks in Android written by Juan Rinconada</a> 의 블로그를 번역한 글 입니다.</p>
+
+<p>안드로이드 개발자라면 Context가 무엇인가라는 질문에 부딪히게 된다. <em>Toasts, Adapters, Intents, Inflaters, SharedPreferences, SystemServices</em> 들을 다룰 때, 꼭 Context가 꼭 필요하다. 즉, 이런 객체를 다루는 모든 활동에서, Context를 인자로 넣어야하는 것이다.</p>
+
+<p>때로는 인자를 넣는 법이 간단하다고 생각하지만 <del>(Activity에서 this 하나면 해결)</del> , Context를 사용하면서도 내가 이걸 왜 인자로 전달해야하는 지 궁금할 때가 있다.</p>
+
+<h1 id="context의-정의">Context의 정의</h1>
+<hr />
+<blockquote>
+  <p><strong>Context란 어플리케이션 환경에 대한 인터페이스이다.</strong></p>
+</blockquote>
+
+<p><img src="/assets/img/meme/hongjinkyung_question_mark.jpg" class="aligncenter" width="30%" height="30%" /></p>
+
+<p><strong><center> 그래서... 그게 무슨 말인데..? </center></strong></p>
+
+<p><strong>“Context는 어플리케이션 환경에 대한 인터페이스이다.”</strong> 라는 말은, Context라는 클래스가 어플리케이션 리소스와 시스템 서비스등에 접근할 수 있는 메소드들을 갖고 있다는 것이다.<br />
+또한, <em>Activity, Service, Application</em> 들은 Context라는 추상클래스를 상속받은 구현체들이다. 앱 내에는 여러개의 Activity가 존재할 수 있고, 따라서 Activity Context도 여러개 생길 수 있다. 하지만, 어플리케이션은 하나이므로 Activity Context와는 다르게 Application Context는 1개만 존재한다.</p>
+
+<p><img src="/assets/img/posts/dev004_01.jpg" class="aligncenter" /></p>
+<center>[Context의 상속트리]</center>
+
+<h1 id="context가-사용되는-곳">Context가 사용되는 곳</h1>
+<hr />
+<p>Context는 일반적으로 뷰(Toast, Adapter, Inflaters), 액티비티 실행(Intents), 시스템 서비스 접근(SharedPreferences, ContentProviders)등에 사용된다. 보다 더 공식적인 분류로 나눈다면 다음과 같다.</p>
+
+<ul>
+  <li>앱 리소스 모음: <em>res, assets, 스토리지</em></li>
+  <li>액티비티간의 커뮤니케이션: <em>Intents</em></li>
+  <li>시스템 서비스 접근: <em>SystemServices</em></li>
+  <li>앱 정보 가져오기: <em>ApplicationInfo</em></li>
+</ul>
+
+<h1 id="context를-가져오는-방법">Context를 가져오는 방법</h1>
+<hr />
+<p>Context를 얻는 3가지 방법이 있다.
+<strong>1. View, 2. Activity, 3. ContextWrapper</strong>
+이 3개의 클래스에 Context를 제공하는 메소드들이 있다.</p>
+
+<h2 id="1-view">1. View</h2>
+<p>View 클래스에서 제공하는 <code class="language-plaintext highlighter-rouge">getContext()</code>는 뷰에 있는 Activity의 Context를 가져다준다. Application Context가 아닌 Activity Context이기 때문에, 특정 Activity의 심미적 변화와 관련된 주제들을 다룬다. 한마디로 Activity Context는 뷰를 관리할 때 쓴다고 할 수 있다. 레이아웃을 inflate하고, 다이얼로그를 보여주는 등, 단기적 작업들에 쓰인다.</p>
+
+<h2 id="2-activity">2. Activity</h2>
+<p>Activity는 Context를 상속받은 하위 클래스이다. 1에서 언급한 Activity Context와 같은 개념이며, <code class="language-plaintext highlighter-rouge">this</code>라는 키워드로 접근하는 그것이 맞다.</p>
+
+<p>Activity클래스엔 Application Context를 가져오는 <code class="language-plaintext highlighter-rouge">getApplicationContext()</code>라는 메소드도 있다. Application Context는 백그라운드 작업 또는 데이터 액세스와 같이 Activity의 라이프사이클에 국한되지 않고 유지되어야 하는 작업 을 할 때 사용된다.</p>
+
+<h2 id="3-contextwrapper">3. ContextWrapper</h2>
+<p>상속 트리의 중간 클래스로 <code class="language-plaintext highlighter-rouge">getBaseContext()</code>라는 메소드가 있다. 하지만 대부분 사용되지 않고, 추천하지도 않는다.</p>
+
+<h1 id="context-usecase">Context Usecase</h1>
+<hr />
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center">Application</th>
+      <th style="text-align: center">Activity</th>
+      <th style="text-align: center">Service</th>
+      <th style="text-align: center">ContentProvider</th>
+      <th style="text-align: center">BroadcastReceiver</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Show a Dialog</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Start an Activity</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Layout Inflation</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+      <td style="text-align: center">X</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Start a Service</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Bind to a Service</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">X</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Send a Broadcast</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Register BroadcastReceiver</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">X</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Load Resource Value</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+      <td style="text-align: center">O</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>표에 Context와 사용되는 유스케이스들을 정리해보았다. <code class="language-plaintext highlighter-rouge">Start an Activity</code> 를 보면, Application과 Service에 X표시가 된 걸 볼 수 있다. 이건 호출스택이 없기 때문이다. <code class="language-plaintext highlighter-rouge">Layout Inflation</code>의 경우도 Activity Context를 써야하는 이유는, 특정 액티비티별로 뷰가 구성되어야 하기 때문이다.</p>
+
+<p>이러한 Context들에 대해 제대로 알아야 하는 이유는, 예기치 않은 문제로부터 우리를 구원해 주는 키가 되기 때문이다. 원인 모를 크래쉬 같은 것들이 메모리 누출과 밀접하게 관련되어 있다.</p>
+
+<p><em>Context와 메모리 누수와 관련된 포스팅은 다음 포스팅에 이어서..</em></p>
+
+  
+
+</article>
+
+  
+<footer class="content" role="contentinfo">
+  <hr/>
+  
+    <p><small class="copyright">Hanna2100 © 2021. All rights reserved.
+</small></p>
+  
+  
+    <p><small>Powered by <a class="external" href="https://hydejack.com/">Hydejack</a> v<span id="_version">9.0.4</span></small></p>
+  <hr class="sr-only"/>
+</footer>
+
+
+</main>
+
+  <hy-drawer
+  id="_drawer"
+  class=""
+  side="left"
+  threshold="10"
+  noscroll
+  
+>
+  <header id="_sidebar" class="sidebar" role="banner">
+    
+
+
+
+
+<div class="sidebar-bg sidebar-overlay" style="background-color:rgb(8,46,57);background-image:url(/assets/img/sidebar-bg.jpg)"></div>
+
+    <div class="sidebar-sticky">
+  <div class="sidebar-about">
+    
+      <a class="no-hover" href="/" tabindex="-1">
+        <img src="/assets/img/logo.png" class="avatar" alt="Dev Hanna" width="120" height="120" loading="lazy" />
+      </a>
+    
+    <a class="sidebar-title" href="/"><h2 class="h1">Dev Hanna</h2></a>
+    
+    
+      <p class="">
+        초급 Android 개발자 입니다.
+
+      </p>
+    
+  </div>
+
+  <nav class="sidebar-nav heading" role="navigation">
+    <span class="sr-only">Navigation:</span>
+<ul>
+  
+    
+      
+      <li>
+        <a
+          id="_drawer--opened"
+          href="/profile/"
+          class="sidebar-nav-item"
+          
+        >
+          Profile
+        </a>
+      </li>
+    
+      
+      <li>
+        <a
+          
+          href="/daily_life/"
+          class="sidebar-nav-item"
+          
+        >
+          Daily life
+        </a>
+      </li>
+    
+      
+      <li>
+        <a
+          
+          href="/android/"
+          class="sidebar-nav-item"
+          
+        >
+          Android
+        </a>
+      </li>
+    
+  
+</ul>
+
+  </nav>
+
+  
+  <div class="sidebar-social">
+    <span class="sr-only">Social:</span>
+<ul>
+  
+    
+      
+
+
+
+  
+
+  
+  
+  
+  
+
+  
+
+  
+
+  <li>
+    <a href="https://github.com/hanna2100" title="GitHub" class="no-mark-external">
+      <span class="icon-github"></span>
+      <span class="sr-only">GitHub</span>
+    </a>
+  </li>
+
+
+    
+      
+
+
+
+  
+
+  
+  
+  
+  
+
+  
+
+  
+
+  <li>
+    <a href="mailto:hanna0497@naver.com" title="Email" class="no-mark-external">
+      <span class="icon-mail"></span>
+      <span class="sr-only">Email</span>
+    </a>
+  </li>
+
+
+    
+  
+</ul>
+
+  </div>
+</div>
+  </header>
+</hy-drawer>
+<hr class="sr-only" hidden />
+
+</hy-push-state>
+
+
+  <!--[if gt IE 10]><!---->
+  <script nomodule>!function(){var e=document.createElement("script");if(!("noModule"in e)&&"onbeforeload"in e){var t=!1;document.addEventListener("beforeload",function(n){if(n.target===e)t=!0;else if(!n.target.hasAttribute("nomodule")||!t)return;n.preventDefault()},!0),e.type="module",e.src=".",document.head.appendChild(e),e.remove()}}();
+</script>
+  <script src="/assets/js/hydejack-9.0.4.js" type="module"></script>
+  <script src="/assets/js/LEGACY-hydejack-9.0.4.js" nomodule defer></script>
+  
+
+  
+
+<!--<![endif]-->
+  <!--
+Code for integrating CloudFlare's email protection with Hydejack's single page app loading.
+-->
+<script>
+  document.getElementById('_pushState').addEventListener('hy-push-state-after', function (e) {
+    function e(e){
+      (console.error?console.error:console.log).call(console,e)
+    }
+
+    function t(e){
+      return l.innerHTML='<a href="'+e.replace(/"/g,"&quot;")+'"></a>',l.childNodes[0].getAttribute("href")
+    }
+
+    function r(e,t){
+      var r=e.substr(t,2);return parseInt(r,16)
+    }
+
+    function n(e,n){
+      for(var o="",c=r(e,n),a=n+2;a<e.length;a+=2){
+        var l=r(e,a)^c;
+        o+=String.fromCharCode(l)
+      }
+      return t(o)
+    }
+
+    var o="/cdn-cgi/l/email-protection#",
+        c=".__cf_email__",
+        a="data-cfemail",
+        l=document.createElement("div");
+
+    !function(){
+      for(var t=document.getElementsByTagName("a"),r=0;r<t.length;r++)
+        try{
+          var c=t[r],a=c.href.indexOf(o);
+          a>-1&&(c.href="mailto:"+n(c.href,a+o.length))
+        }catch(t){
+          e(t)
+        }
+    }(),
+    function(){
+      for(var t=document.querySelectorAll(c),r=0;r<t.length;r++)
+        try{
+          var o=t[r],l=n(o.getAttribute(a),0),i=document.createTextNode(l);
+          o.parentNode.replaceChild(i,o)
+        }catch(t){
+          e(t)
+        }
+    }()
+  });
+</script>
+
+
+
+
+
+<div hidden>
+  
+  <h2 class="sr-only">Templates (for web app):</h2>
+
+  <template id="_animation-template">
+  <div class="animation-main fixed-top">
+    <div class="content">
+      <div class="page"></div>
+    </div>
+  </div>
+</template>
+
+  <template id="_loading-template">
+  <div class="loading nav-btn fr">
+    <span class="sr-only">Loading…</span>
+    <span class="icon-cog"></span>
+  </div>
+</template>
+
+  <template id="_error-template">
+  <div class="page">
+    <h1 class="page-title">Error</h1>
+    
+    
+    <p class="lead">
+      Sorry, an error occurred while loading <a class="this-link" href=""></a>.
+
+    </p>
+  </div>
+</template>
+
+  <template id="_forward-template">
+  <button id="_forward" class="forward nav-btn no-hover">
+    <span class="sr-only">Forward</span>
+    <span class="icon-arrow-right2"></span>
+  </button>
+</template>
+
+  <template id="_back-template">
+  <button id="_back" class="back nav-btn no-hover">
+    <span class="sr-only">Back</span>
+    <span class="icon-arrow-left2"></span>
+  </button>
+</template>
+
+  <template id="_permalink-template">
+  <a href="#" class="permalink">
+    <span class="sr-only">Permalink</span>
+    <span class="content-hash"></span>
+  </a>
+</template>
+
+</div>
+
+
+</body>
+</html>

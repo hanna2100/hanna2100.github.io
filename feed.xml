@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="kr"><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://hanna2100.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://hanna2100.github.io/" rel="alternate" type="text/html" hreflang="kr" /><updated>2021-01-09T22:58:15+09:00</updated><id>https://hanna2100.github.io/feed.xml</id><title type="html">Dev Hanna</title><subtitle>하루 1보 걷기.
+</subtitle><author><name>hnr jang</name><email>hanna0497@naver.com</email></author><entry><title type="html">[번역] 안드로이드의 Context란 무엇인가?</title><link href="https://hanna2100.github.io/android/2021-01-09-dev004/" rel="alternate" type="text/html" title="[번역] 안드로이드의 Context란 무엇인가?" /><published>2021-01-09T00:00:00+09:00</published><updated>2021-01-09T22:50:25+09:00</updated><id>https://hanna2100.github.io/android/dev004</id><content type="html" xml:base="https://hanna2100.github.io/android/2021-01-09-dev004/">&lt;p&gt;&lt;a href=&quot;https://medium.com/swlh/context-and-memory-leaks-in-android-82a39ed33002&quot;&gt;Context and memory leaks in Android written by Juan Rinconada&lt;/a&gt; 의 블로그를 번역한 글 입니다.&lt;/p&gt;
+
+&lt;p&gt;안드로이드 개발자라면 Context가 무엇인가라는 질문에 부딪히게 된다. &lt;em&gt;Toasts, Adapters, Intents, Inflaters, SharedPreferences, SystemServices&lt;/em&gt; 들을 다룰 때, 꼭 Context가 꼭 필요하다. 즉, 이런 객체를 다루는 모든 활동에서, Context를 인자로 넣어야하는 것이다.&lt;/p&gt;
+
+&lt;p&gt;때로는 인자를 넣는 법이 간단하다고 생각하지만 &lt;del&gt;(Activity에서 this 하나면 해결)&lt;/del&gt; , Context를 사용하면서도 내가 이걸 왜 인자로 전달해야하는 지 궁금할 때가 있다.&lt;/p&gt;
+
+&lt;h1 id=&quot;context의-정의&quot;&gt;Context의 정의&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Context란 어플리케이션 환경에 대한 인터페이스이다.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/meme/hongjinkyung_question_mark.jpg&quot; class=&quot;aligncenter&quot; width=&quot;30%&quot; height=&quot;30%&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt; 그래서... 그게 무슨 말인데..? &lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;“Context는 어플리케이션 환경에 대한 인터페이스이다.”&lt;/strong&gt; 라는 말은, Context라는 클래스가 어플리케이션 리소스와 시스템 서비스등에 접근할 수 있는 메소드들을 갖고 있다는 것이다.&lt;br /&gt;
+또한, &lt;em&gt;Activity, Service, Application&lt;/em&gt; 들은 Context라는 추상클래스를 상속받은 구현체들이다. 앱 내에는 여러개의 Activity가 존재할 수 있고, 따라서 Activity Context도 여러개 생길 수 있다. 하지만, 어플리케이션은 하나이므로 Activity Context와는 다르게 Application Context는 1개만 존재한다.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/dev004_01.jpg&quot; class=&quot;aligncenter&quot; /&gt;&lt;/p&gt;
+&lt;center&gt;[Context의 상속트리]&lt;/center&gt;
+
+&lt;h1 id=&quot;context가-사용되는-곳&quot;&gt;Context가 사용되는 곳&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;p&gt;Context는 일반적으로 뷰(Toast, Adapter, Inflaters), 액티비티 실행(Intents), 시스템 서비스 접근(SharedPreferences, ContentProviders)등에 사용된다. 보다 더 공식적인 분류로 나눈다면 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;앱 리소스 모음: &lt;em&gt;res, assets, 스토리지&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;액티비티간의 커뮤니케이션: &lt;em&gt;Intents&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;시스템 서비스 접근: &lt;em&gt;SystemServices&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;앱 정보 가져오기: &lt;em&gt;ApplicationInfo&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;context를-가져오는-방법&quot;&gt;Context를 가져오는 방법&lt;/h1&gt;
+&lt;hr /&gt;
+&lt;p&gt;Context를 얻는 3가지 방법이 있다.
+&lt;strong&gt;1. View, 2. Activity, 3. ContextWrapper&lt;/strong&gt;
+이 3개의 클래스에 Context를 제공하는 메소드들이 있다.&lt;/p&gt;
+
+&lt;h2 id=&quot;1-view&quot;&gt;1. View&lt;/h2&gt;
+&lt;p&gt;View 클래스에서 제공하는 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getContext()&lt;/code&gt;는 뷰에 있는 Activity의 Context를 가져다준다. Application Context가 아닌 Activity Context이기 때문에, 특정 Activity의 심미적 변화와 관련된 주제들을 다룬다. 한마디로 Activity Context는 뷰를 관리할 때 쓴다고 할 수 있다. 레이아웃을 inflate하고, 다이얼로그를 보여주는 등, 단기적 작업들에 쓰인다.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-activity&quot;&gt;2. Activity&lt;/h2&gt;
+&lt;p&gt;Activity는 Context를 상속받은 하위 클래스이다. 1에서 언급한 Activity Context와 같은 개념이며, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;this&lt;/code&gt;라는 키워드로 접근하는 그것이 맞다.&lt;/p&gt;
+
+&lt;p&gt;Activity클래스엔 Application Context를 가져오는 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getApplicationContext()&lt;/code&gt;라는 메소드도 있다. Application Context는 백그라운드 작업 또는 데이터 액세스와 같이 Activity의 라이프사이클에 국한되지 않고 유지되어야 하는 작업 을 할 때 사용된다.&lt;/p&gt;
+
+&lt;h2 id=&quot;3-contextwrapper&quot;&gt;3. ContextWrapper&lt;/h2&gt;
+&lt;p&gt;상속 트리의 중간 클래스로 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getBaseContext()&lt;/code&gt;라는 메소드가 있다. 하지만 대부분 사용되지 않고, 추천하지도 않는다.&lt;/p&gt;
+
+&lt;h1 id=&quot;context-usecase&quot;&gt;Context Usecase&lt;/h1&gt;
+&lt;hr /&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: left&quot;&gt; &lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Application&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Activity&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Service&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;ContentProvider&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;BroadcastReceiver&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Show a Dialog&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Start an Activity&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Layout Inflation&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Start a Service&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Bind to a Service&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Send a Broadcast&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Register BroadcastReceiver&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;X&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: left&quot;&gt;Load Resource Value&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;O&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;표에 Context와 사용되는 유스케이스들을 정리해보았다. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Start an Activity&lt;/code&gt; 를 보면, Application과 Service에 X표시가 된 걸 볼 수 있다. 이건 호출스택이 없기 때문이다. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Layout Inflation&lt;/code&gt;의 경우도 Activity Context를 써야하는 이유는, 특정 액티비티별로 뷰가 구성되어야 하기 때문이다.&lt;/p&gt;
+
+&lt;p&gt;이러한 Context들에 대해 제대로 알아야 하는 이유는, 예기치 않은 문제로부터 우리를 구원해 주는 키가 되기 때문이다. 원인 모를 크래쉬 같은 것들이 메모리 누출과 밀접하게 관련되어 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Context와 메모리 누수와 관련된 포스팅은 다음 포스팅에 이어서..&lt;/em&gt;&lt;/p&gt;</content><author><name>hnr jang</name><email>hanna0497@naver.com</email></author><category term="android" /><summary type="html">Context and memory leaks in Android written by Juan Rinconada 의 블로그를 번역한 글 입니다.</summary></entry><entry><title type="html">[FATAL:jni_android.cc(236)] 안드로이드 웹뷰 에러</title><link href="https://hanna2100.github.io/android/2021-01-07-dev003/" rel="alternate" type="text/html" title="[FATAL:jni_android.cc(236)] 안드로이드 웹뷰 에러" /><published>2021-01-07T00:00:00+09:00</published><updated>2021-01-09T22:50:25+09:00</updated><id>https://hanna2100.github.io/android/dev003</id><content type="html" xml:base="https://hanna2100.github.io/android/2021-01-07-dev003/">&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;W/System.err: java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.drawable.Drawable.getPadding(android.graphics.Rect)' on a null object reference
+W/System.err:     at org.chromium.ui.DropdownPopupWindow.&amp;lt;init&amp;gt;(DropdownPopupWindow.java:81)
+W/System.err:     at org.chromium.ui.autofill.AutofillPopup.&amp;lt;init&amp;gt;(AutofillPopup.java:48)
+W/System.err:     at org.chromium.android_webview.AwAutofillClient.showAutofillPopup(AwAutofillClient.java:50)
+W/System.err:     at org.chromium.base.SystemMessageHandler.nativeDoRunLoopOnce(Native Method)
+W/System.err:     at org.chromium.base.SystemMessageHandler.handleMessage(SystemMessageHandler.java:39)
+W/System.err:     at android.os.Handler.dispatchMessage(Handler.java:102)
+W/System.err:     at android.os.Looper.loop(Looper.java:154)
+W/System.err:     at android.app.ActivityThread.main(ActivityThread.java:6141)
+W/System.err:     at java.lang.reflect.Method.invoke(Native Method)
+W/System.err:     at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:912)
+W/System.err:     at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:802)
+A/chromium: [FATAL:jni_android.cc(236)] Please include Java exception stack in crash report
+    --------- beginning of crash
+A/google-breakpad: -----BEGIN BREAKPAD MICRODUMP-----
+A/google-breakpad: V WebView:52.0.2743.100
+A/google-breakpad: O A arm 04 armv7l Android/rk3288/rk3288:7.1.2/NHG47K/starwa07231554:userdebug/test-keys
+A/google-breakpad: G OpenGL ES 3.2 v1.r18p0-01rel0.af96b5aad9c0ccc8dee4b7c083ab1938|ARM|Mali-T760
+A/google-breakpad: H 12C00000 FFFF1000 006C 40FF8000 9C9CA000 0C:0F 0D:0D 0E:08 0F:07 10:06 11:02 12:03 13:02 14:03 15:03 16:0D 17:0D 18:09 19:06 1A:01 1B:01 1C:02 1E:01
+A/google-breakpad: S 0 BE9AB3A0 BE9AB000 00003000
+A/google-breakpad: S BE9AB000
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;웹뷰 호출 후 웹뷰안의 EditText가 활성화되면 해당 에러가 발생하였다.
+코드상의 문제가 아닌 웹뷰 자체에서 뱉는 에러라 원인파악이 어려웠다.
+구글링을 통해 찾아본 해결법은 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;onDestroyView()&lt;/code&gt; 될 때, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WebView&lt;/code&gt;를 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;destroy()&lt;/code&gt; 하라는 것이었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;해결법-1-webview-destroy&quot;&gt;해결법 1. WebView destroy()&lt;/h3&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onDestroyView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;onDestroyView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;myWbView&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;myWbView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;destroy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;webView&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// remove webView, prevent chromium to crash&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;검색했을 때 가장 많은 답변이 onDestroy()를 하라는 것이었다.
+&lt;a href=&quot;https://stackoverflow.com/questions/31416568/could-someone-help-me-with-this-crash-report&quot;&gt;https://stackoverflow.com/questions/31416568/could-someone-help-me-with-this-crash-report&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;destroy()를 하는 이유:&lt;br /&gt;
+Webview 를 xml layout으로 잡을 경우 메모리 누수가 발생할 수 있다. 그렇게 때문에 onDestroy 에서 webview 를 명시적으로 해제 시켜야 함.(혹은 xml이 아닌 코드상으로 WebView객체를 직접 만들어 써야함)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;그런데 나는 destroy를 해도 계속 위 에러가 발생하였고, &lt;strong&gt;결국 찾아낸 해결법은 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;webView.settings.saveFormData = false&lt;/code&gt; 속성을 주는 것&lt;/strong&gt;이었다.&lt;/p&gt;
+
+&lt;h3 id=&quot;해결법2-saveformdata-에-false값-주기&quot;&gt;해결법2. saveFormData 에 false값 주기&lt;/h3&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;W/System.err: java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.drawable.Drawable.getPadding(android.graphics.Rect)' on a null object reference
+W/System.err:     at org.chromium.ui.DropdownPopupWindow.&amp;lt;init&amp;gt;(DropdownPopupWindow.java:81)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;A/chromium: [FATAL:jni_android.cc(236)]&lt;/code&gt; FATAL 에러가 나기 전에, Rect를 그리는 그래픽 객체에 &lt;strong&gt;NullPointerException&lt;/strong&gt;이 뜬다. DropdownPopupWindow 를 생성하지 못하는데, 내 추측으로는 해당 객체가 EditText를 눌렀을때 호출되는데 버전문제로 인해서 생성하지 못하여 크래쉬가 난 게 아닌가 싶다.(참고로 안드로이드7 버전이었다.)&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;A/chromium: [FATAL:jni_android.cc(236)]&lt;/code&gt; 에러가 100% DropdownPopupWindow의 init이 안되어 나는 에러인지는 모르겠는데, 만약 나처럼 특정 객체에 NullPointerException이 발생하여 이 에러가 뜬다면, 해당 오브젝트를 호출하는 웹뷰 속성값을 해제시켜주는 메소드가 있는지 찾아보길 바란다.&lt;/p&gt;
+
+&lt;p&gt;나는 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;webView.settings.saveFormData = false&lt;/code&gt; 속성을 웹뷰에 적용했더니 문제가 해결되었다. 참고로 코틀린 기준이니 자바는 조금 다를 수 있다.&lt;/p&gt;</content><author><name>hnr jang</name><email>hanna0497@naver.com</email></author><category term="android" /><summary type="html">W/System.err: java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.drawable.Drawable.getPadding(android.graphics.Rect)' on a null object reference W/System.err: at org.chromium.ui.DropdownPopupWindow.&amp;lt;init&amp;gt;(DropdownPopupWindow.java:81) W/System.err: at org.chromium.ui.autofill.AutofillPopup.&amp;lt;init&amp;gt;(AutofillPopup.java:48) W/System.err: at org.chromium.android_webview.AwAutofillClient.showAutofillPopup(AwAutofillClient.java:50) W/System.err: at org.chromium.base.SystemMessageHandler.nativeDoRunLoopOnce(Native Method) W/System.err: at org.chromium.base.SystemMessageHandler.handleMessage(SystemMessageHandler.java:39) W/System.err: at android.os.Handler.dispatchMessage(Handler.java:102) W/System.err: at android.os.Looper.loop(Looper.java:154) W/System.err: at android.app.ActivityThread.main(ActivityThread.java:6141) W/System.err: at java.lang.reflect.Method.invoke(Native Method) W/System.err: at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:912) W/System.err: at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:802) A/chromium: [FATAL:jni_android.cc(236)] Please include Java exception stack in crash report --------- beginning of crash A/google-breakpad: -----BEGIN BREAKPAD MICRODUMP----- A/google-breakpad: V WebView:52.0.2743.100 A/google-breakpad: O A arm 04 armv7l Android/rk3288/rk3288:7.1.2/NHG47K/starwa07231554:userdebug/test-keys A/google-breakpad: G OpenGL ES 3.2 v1.r18p0-01rel0.af96b5aad9c0ccc8dee4b7c083ab1938|ARM|Mali-T760 A/google-breakpad: H 12C00000 FFFF1000 006C 40FF8000 9C9CA000 0C:0F 0D:0D 0E:08 0F:07 10:06 11:02 12:03 13:02 14:03 15:03 16:0D 17:0D 18:09 19:06 1A:01 1B:01 1C:02 1E:01 A/google-breakpad: S 0 BE9AB3A0 BE9AB000 00003000 A/google-breakpad: S BE9AB000</summary></entry><entry><title type="html">[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1</title><link href="https://hanna2100.github.io/android/2021-01-06-dev002/" rel="alternate" type="text/html" title="[Jetpack Compose] 그래디언트 로딩 애니메이션 구현 - 1" /><published>2021-01-06T00:00:00+09:00</published><updated>2021-01-09T22:50:25+09:00</updated><id>https://hanna2100.github.io/android/dev002</id><content type="html" xml:base="https://hanna2100.github.io/android/2021-01-06-dev002/">&lt;p&gt;&lt;a href=&quot;https://youtu.be/LfXvDaDEYSI&quot;&gt;Shimmer Loading Animation with Jetpack Compose&lt;/a&gt; 강의를 듣고 정리한 내용입니다.&lt;/p&gt;
+
+&lt;h2 id=&quot;buildgradle&quot;&gt;build.gradle&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nf&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compose&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;1.0.0-alpha09&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.ui:ui-tooling:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.ui:ui:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.foundation:foundation:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.runtime:runtime-livedata:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.runtime:runtime-rxjava2:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.material:material:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.material:material-icons-core:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.compose.material:material-icons-extended:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;androidTestImplementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;androidx.ui:ui-test:$compose&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Jetpack Compose 1.0.0-alpha09 버전 사용&lt;/p&gt;
+
+&lt;h2 id=&quot;demo-맛보기&quot;&gt;Demo 맛보기&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@Composable&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GradientDemo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;colors&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;listOf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Blue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Red&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Blue&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;brush&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Brush&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;linearGradient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;colors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;200f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;200f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;end&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;400f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;400f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nc&quot;&gt;Surface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MaterialTheme&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shapes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;small&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Spacer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;modifier&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Modifier&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fillMaxSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brush&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;brush&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/dev002_01.jpg&quot; class=&quot;aligncenter&quot; width=&quot;40%&quot; height=&quot;40%&quot; /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;colors: 그래디언트로 표현할 색상.&lt;/li&gt;
+  &lt;li&gt;brush: 그래디언트 방향.
+    &lt;ul&gt;
+      &lt;li&gt;linearGradient: 사선&lt;/li&gt;
+      &lt;li&gt;horizontalGradient: 수평&lt;/li&gt;
+      &lt;li&gt;verticalGradient: 수직&lt;/li&gt;
+      &lt;li&gt;radialGradient: 방사형 원형&lt;/li&gt;
+      &lt;li&gt;sweepGradient: 동그랗게 쓸어낸 형태(?) &lt;del&gt;말로는 설명이 어렵다.&lt;/del&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;brush의 start, end
+    &lt;ul&gt;
+      &lt;li&gt;왼쪽 상단 모서리부터 좌표계가 시작한다고 보면 된다.&lt;/li&gt;
+      &lt;li&gt;start의 Offset(200f, 200f)은 x = 200f, y = 200f 뜻한다.&lt;/li&gt;
+      &lt;li&gt;end의 Offset은 x = 400f, y = 400f 이므로 start와 end를 합하면 사진과 같은 좌표계가 구성되고 해당영역을 기준으로 배경에 brush가 칠해진다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;practice&quot;&gt;Practice&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;h3 id=&quot;그래디언트-생성&quot;&gt;그래디언트 생성&lt;/h3&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onCreateView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;inflater&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;LayoutInflater&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ViewGroup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;savedInstanceState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Bundle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;View&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ComposeView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;requireContext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()).&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;apply&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;setContent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nc&quot;&gt;ShimmerRecipeCardItem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;colors&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;listOf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                    &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;LightGray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.9f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+                    &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;LightGray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.2f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+                    &lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;LightGray&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.9f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;cardHeight&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;250&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dp&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nd&quot;&gt;@Composable&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ShimmerRecipeCardItem&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;colors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cardHeight&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Dp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;brush&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Brush&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;linearGradient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;colors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;200f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;200f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;end&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;400f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;400f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nc&quot;&gt;Surface&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MaterialTheme&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shapes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;small&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Spacer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;modifier&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Modifier&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;fillMaxWidth&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;preferredHeight&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cardHeight&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brush&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;brush&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/img/posts/dev002_02.jpg&quot; class=&quot;aligncenter&quot; width=&quot;40%&quot; height=&quot;40%&quot; /&gt;
+자 이제 레시피 Item에 그래디언트를 적용해보자. 
+ShimmerRecipeCardItem 함수를 만들어 그래디언트 색상과 아이템 높이를 인자로 받고, 해당역역을 brush로 칠해주는 Composable를 만들었다.&amp;lt;/br&amp;gt;
+색상은 aplpha값을 넣어 투명도를 조절했다. 그럭저럭 형태는 갖춰졌으니 이제 애니메이션이 필요하다.&lt;/p&gt;
+
+&lt;h3 id=&quot;애니메이션-정의&quot;&gt;애니메이션 정의&lt;/h3&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ShimmerAnimationDefinition&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;widthPx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Float&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;heightPx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Float&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AnimationState&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;START&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;END&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;xShimmerPropKey&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FloatPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;xShimmer&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;yShimmerPropKey&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FloatPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;yShimmer&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;shimmerTransitionDefinition&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transitionDefinition&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;AnimationState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;START&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xShimmerPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0f&lt;/span&gt;
+          &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;yShimmerPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0f&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;END&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xShimmerPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;widthPx&lt;/span&gt;
+          &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;yShimmerPropKey&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;heightPx&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;nf&quot;&gt;transition&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;START&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;END&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;xShimmerPropKey&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;infiniteRepeatable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;animation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;tween&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;durationMillis&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1300&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;delayMillis&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;300&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;easing&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;LinearEasing&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;yShimmerPropKey&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;infiniteRepeatable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;animation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;tween&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;durationMillis&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1300&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;delayMillis&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;300&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;easing&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;LinearEasing&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;ShimmerAnimationDefinition을 정의한다. 모든 애니메이션은 enum class를 활용하여 상태값을 정의한다.
+최소값은 0f인데 최대값을 모르므로  파라미터를 받도록 하자. 파라미터를 Dp가 아닌 Float으로 받는 이유는 PropKey도 Float이기 때문이다(계산편의성).
+애니메이션 적용에 관한부분은 다음 포스팅에서 이어서 할 예정이다.&lt;/p&gt;</content><author><name>hnr jang</name><email>hanna0497@naver.com</email></author><category term="android" /><summary type="html">Shimmer Loading Animation with Jetpack Compose 강의를 듣고 정리한 내용입니다.</summary></entry><entry><title type="html">Log4j로 안드로이드에 날짜별로 로그파일 생성</title><link href="https://hanna2100.github.io/android/2021-01-05-dev001/" rel="alternate" type="text/html" title="Log4j로 안드로이드에 날짜별로 로그파일 생성" /><published>2021-01-05T23:49:00+09:00</published><updated>2021-01-09T22:50:25+09:00</updated><id>https://hanna2100.github.io/android/dev001</id><content type="html" xml:base="https://hanna2100.github.io/android/2021-01-05-dev001/">&lt;p&gt;키오스크 개발을 하면서 안드로이드 OS에 로그파일을 날짜별로 쌓아둬야하는 요구사항이 있어 Log4j 라이브러리로 구현하였다.
+Log4j, slf4j 두 가지 옵션이 있었는데, slf4j는 날짜별로 쌓을 수 있는 안드로이드 예제가 없어 Log4j로 구현하였다.
+대신 sl4j는 최대 파일 갯수를 정해 놓고, 용량이 차면 로테이션 하는 방식으로 로그를 관리할 수 있으니, 조건에 맞는걸로 선택하면 되겠다.
+Log4j도 로테이션하는 기능이 있으나 Log4j 2버전을 써야한다고 한다. (여기서는 1.2+ 버전으로 구현한다.)&lt;/p&gt;
+
+&lt;h2 id=&quot;buildgradle&quot;&gt;build.gradle&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nf&quot;&gt;dependencies&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;log4j:log4j:1.2+&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;implementation&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;de.mindpipe.android:android-logging-log4j:1.0.3&quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;log4j 안드로이드 라이브러리를 implementation한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;loghelper&quot;&gt;LogHelper&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;LogHelper&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nf&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;configuration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;configuration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+        &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;patternLayout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createPatternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;rollingAppender&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createDailyRollingLogFileAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;patternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;nf&quot;&gt;setAppenderWithRootLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;LogHelper 싱글턴 객체를 구현한다.&lt;/p&gt;
+
+&lt;p&gt;라이브러리에 구현된 RootLogger에 PatternLayout과 DailyRollingLogFileAppender를 설정해줄 것이다.&lt;/p&gt;
+
+&lt;h2 id=&quot;configuration&quot;&gt;Configuration&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;h3 id=&quot;patternlayout&quot;&gt;PatternLayout&lt;/h3&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createPatternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PatternLayout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;patternLayout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PatternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;conversionPattern&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;[%d] %c %M - [%p] %m%n&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;patternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conversionPattern&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conversionPattern&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;patternLayout&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;ul&gt;
+  &lt;li&gt;#%d  로그 발생 시간기록. (%d{yyyy MMM dd HH:mm:ss, SSS}같은 형태로 사용하며 SimpleDateFormat을 따른다.)&lt;/li&gt;
+  &lt;li&gt;#%c  카테고리 출력.&lt;/li&gt;
+  &lt;li&gt;#%M  로그를 기록한 메소드 명.&lt;/li&gt;
+  &lt;li&gt;#%p  debug, info, warn, error, fatal 등의 priority.&lt;/li&gt;
+  &lt;li&gt;#%m  로그 메세지.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;#%n  플랫폼 종속적인 개행문자 출력. (\r\n 또는 \n)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;추가로 알면 좋은 것
+    &lt;ul&gt;
+      &lt;li&gt;#%t  스레드 이름을 출력.&lt;/li&gt;
+      &lt;li&gt;#%%  % 문자를 출력하기 위해 사용.&lt;/li&gt;
+      &lt;li&gt;#%C  클래스명 출력. (com.example.android.SomeClass일 경우, %C{2}는 android.SomeClass가 출력됨.)&lt;/li&gt;
+      &lt;li&gt;#%F  프로그램 파일명 출력.&lt;/li&gt;
+      &lt;li&gt;#%l  로깅이 발생한 caller의 정보.&lt;/li&gt;
+      &lt;li&gt;#%L  로깅이 발생한 caller의 라인수.&lt;/li&gt;
+      &lt;li&gt;#%r  어플리케이션 시작 이후 부터 로깅이 발생한 시점의 시간(milliseconds).&lt;/li&gt;
+      &lt;li&gt;#%x  로깅이 발생한 thread와 관련된 NDC(nested diagnostic context)를 출력.&lt;/li&gt;
+      &lt;li&gt;#%X  로깅이 발생한 thread와 관련된 MDC(mapped diagnostic context)를 출력.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;dailyrollinglogfileappender&quot;&gt;DailyRollingLogFileAppender&lt;/h3&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;createDailyRollingLogFileAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;patternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;PatternLayout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DailyRollingFileAppender&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;rollingAppender&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DailyRollingFileAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;path&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;makeDirectory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;fileName&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$path/LogFile.log&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fileName&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;datePattern&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;'.'yyyy-MM-dd&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;layout&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;patternLayout&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;activateOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;makeDirectory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;path&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Environment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getExternalStorageDirectory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;absolutePath&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/log&quot;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;logDir&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;logDir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;exists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;logDir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;mkdir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;IOException&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;printStackTrace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Environment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getExternalStorageDirectory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;absolutePath&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;Environment.getExternalStorageDirectory().absolutePath&lt;/em&gt; 외부 스토리지 최상위 절대경로이다.&lt;/p&gt;
+
+&lt;p&gt;나의 경우 최상위 경로 아래 log폴더를 만들어 그 안에 LogFile.log를 저장하기로 했다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;
+&lt;em&gt;rollingAppender.datePattern = “’.’yyyy-MM-dd”&lt;/em&gt;는 날짜별로 log파일을 만드는 패턴형식이다.&lt;/p&gt;
+
+&lt;p&gt;테스트시 &lt;strong&gt;’.’yyyy-MM-dd-HH-mm&lt;/strong&gt; 로 분단위로 생성되도록 설정하는것이 좋다.&lt;/p&gt;
+
+&lt;p&gt;일단위로 테스트를 하면 로그파일이 LogFile.log.2020-01-01 식으로 생성될텐데, 해당 파일은 1월 2일에 생성된다.&lt;/p&gt;
+
+&lt;p&gt;즉, 1월 1일날 테스트를 하면 내일에서야 로그파일이 생성되기때문에 처음엔 분단위로 테스트 하는 것이 좋다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;추가로 알면 좋은 것
+    &lt;ul&gt;
+      &lt;li&gt;’.’yyyy-MM           매달 첫번째날에 로그파일을 변경&lt;/li&gt;
+      &lt;li&gt;’.’yyyy-ww           매주의 시작시 로그파일을 변경&lt;/li&gt;
+      &lt;li&gt;’.’yyyy-MM-dd        매일 자정에 로그파일을 변경&lt;/li&gt;
+      &lt;li&gt;’.’yyyy-MM-dd-a      자정과 정오에 로그파일을 변경&lt;/li&gt;
+      &lt;li&gt;’.’yyyy-MM-dd-HH     매 시간의 시작마다 로그파일을 변경&lt;/li&gt;
+      &lt;li&gt;’.’yyyy-MM-dd-HH-mm  매분마다 로그파일을 변경&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;setappenderwithrootlogger&quot;&gt;setAppenderWithRootLogger&lt;/h3&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;setAppenderWithRootLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DailyRollingFileAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;rootLogger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getRootLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rootLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;level&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Level&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;DEBUG&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;rootLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;addAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rollingAppender&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;?):&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Logger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;RootLogger에 DailyRollingFileAppender를 적용한다.&lt;/p&gt;
+
+&lt;h2 id=&quot;apply&quot;&gt;Apply&lt;/h2&gt;
+&lt;hr /&gt;
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;logger&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;LogHelper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getLogger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;simpleName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;writeLog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;debug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Log4j Log Test&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;이런 형태로 Logger를 구현하면 된다.&lt;/p&gt;</content><author><name>hnr jang</name><email>hanna0497@naver.com</email></author><category term="android" /><summary type="html">키오스크 개발을 하면서 안드로이드 OS에 로그파일을 날짜별로 쌓아둬야하는 요구사항이 있어 Log4j 라이브러리로 구현하였다. Log4j, slf4j 두 가지 옵션이 있었는데, slf4j는 날짜별로 쌓을 수 있는 안드로이드 예제가 없어 Log4j로 구현하였다. 대신 sl4j는 최대 파일 갯수를 정해 놓고, 용량이 차면 로테이션 하는 방식으로 로그를 관리할 수 있으니, 조건에 맞는걸로 선택하면 되겠다. Log4j도 로테이션하는 기능이 있으나 Log4j 2버전을 써야한다고 한다. (여기서는 1.2+ 버전으로 구현한다.)</summary></entry></feed>
