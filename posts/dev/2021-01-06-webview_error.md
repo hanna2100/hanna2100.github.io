@@ -1,14 +1,6 @@
----
-layout: page
-author: author1  
-title: "[FATAL:jni_android.cc(236)] 안드로이드 웹뷰 에러"
-description: >
-  
-hide_description: true
-sitemap: false
----
+안드로이드 앱에서 웹뷰를 다루던 중, 웹뷰 화면의 EditText를 클릭해서 글자를 적으면 아래와 같은 에러가 발생하였다.
 
-```
+```log
 W/System.err: java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.drawable.Drawable.getPadding(android.graphics.Rect)' on a null object reference
 W/System.err:     at org.chromium.ui.DropdownPopupWindow.<init>(DropdownPopupWindow.java:81)
 W/System.err:     at org.chromium.ui.autofill.AutofillPopup.<init>(AutofillPopup.java:48)
@@ -32,11 +24,12 @@ A/google-breakpad: S 0 BE9AB3A0 BE9AB000 00003000
 A/google-breakpad: S BE9AB000
 ```
 
-웹뷰 호출 후 웹뷰안의 EditText가 활성화되면 해당 에러가 발생하였다.
-코드상의 문제가 아닌 웹뷰 자체에서 뱉는 에러라 원인파악이 어려웠다.
-구글링을 통해 찾아본 해결법은 `onDestroyView()` 될 때, `WebView`를 `destroy()` 하라는 것이었다.
+코드상의 문제가 아닌 웹뷰 자체에서 뱉는 에러라 원인파악이 어려웠다. 먼저 **[FATAL:jni_android.cc(236)]** 을 구글링 해서 찾아본 해결법은 `onDestroyView()` 될 때, `WebView`를 `destroy()` 하라는 것이었다.
+</br>
+
 
 ### 해결법 1. WebView destroy()
+---
 ```java
 @Override
 public void onDestroyView() {
@@ -47,23 +40,28 @@ public void onDestroyView() {
     }
 }
 ```
-검색했을 때 가장 많은 답변이 onDestroy()를 하라는 것이었다.
+검색했을 때 가장 많은 답변이 `onDestroy()`를 하라는 것이었다.
 [https://stackoverflow.com/questions/31416568/could-someone-help-me-with-this-crash-report](https://stackoverflow.com/questions/31416568/could-someone-help-me-with-this-crash-report)
 
-- destroy()를 하는 이유:  
+- `destroy()`를 하는 이유? 
 Webview 를 xml layout으로 잡을 경우 메모리 누수가 발생할 수 있다. 그렇게 때문에 onDestroy 에서 webview 를 명시적으로 해제 시켜야 함.(혹은 xml이 아닌 코드상으로 WebView객체를 직접 만들어 써야함)
 
-그런데 나는 destroy를 해도 계속 위 에러가 발생하였고, **결국 찾아낸 해결법은 `webView.settings.saveFormData = false` 속성을 주는 것**이었다.
+그런데 나는 `destroy()`를 해도 계속 위 에러가 발생하였고, **결국 찾아낸 해결법은 `webView.settings.saveFormData = false` 속성을 주는 것**이었다.
+</br>
 
 ### 해결법2. saveFormData 에 false값 주기
+---
 ```
 W/System.err: java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.graphics.drawable.Drawable.getPadding(android.graphics.Rect)' on a null object reference
 W/System.err:     at org.chromium.ui.DropdownPopupWindow.<init>(DropdownPopupWindow.java:81)
 ```
-`A/chromium: [FATAL:jni_android.cc(236)]` FATAL 에러가 나기 전에, Rect를 그리는 그래픽 객체에 **NullPointerException**이 뜬다. DropdownPopupWindow 를 생성하지 못하는데, 내 추측으로는 해당 객체가 EditText를 눌렀을때 호출되는데 버전문제로 인해서 생성하지 못하여 크래쉬가 난 게 아닌가 싶다.(참고로 안드로이드7 버전이었다.)
+
+`A/chromium: [FATAL:jni_android.cc(236)]` FATAL 에러가 나기 전에, Rect를 그리는 그래픽 객체에 **NullPointerException**이 뜬다. *DropdownPopupWindow* 를 생성하지 못하는데, 내 추측으로는 해당 객체가 EditText를 눌렀을때 호출되는데 버전문제로 인해서 생성하지 못하여 크래쉬가 난 게 아닌가 싶다.(참고로 안드로이드7 버전이었다.)
 
 `A/chromium: [FATAL:jni_android.cc(236)]` 에러가 100% DropdownPopupWindow의 init이 안되어 나는 에러인지는 모르겠는데, 만약 나처럼 특정 객체에 NullPointerException이 발생하여 이 에러가 뜬다면, 해당 오브젝트를 호출하는 웹뷰 속성값을 해제시켜주는 메소드가 있는지 찾아보길 바란다.
 
 나는 `webView.settings.saveFormData = false` 속성을 웹뷰에 적용했더니 문제가 해결되었다. 참고로 코틀린 기준이니 자바는 조금 다를 수 있다.
+
+</br>
 
 
