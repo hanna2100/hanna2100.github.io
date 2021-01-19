@@ -116,7 +116,7 @@ class ObserverImpl implements Observer {
 
 ---
 ### 3. 느슨한 결합(Loose Coupling)의 위력
-두 객체가 느슨하게 결합되어 있다는 것은, 그 둘이 상호작용을 하긴 하지만 서로에 대해 잘 모르는 것을 의미합니다. 옵저버 패턴에서는 주제와 옵저버가 느슨하게 결합되어 있는 객체 디자인을 제공하지요.
+두 객체가 느슨하게 결합되어 있다는 것은, 그 둘이 상호작용을 하긴 하지만 서로에 대해 잘 모르는 것을 의미합니다. 옵저버 패턴에서는 주제와 옵저버가 느슨하게 결합되어 있는 객체 디자인을 제공합니다.
 
 느슨한 결합의 장점은 다음과 같습니다.
 
@@ -132,3 +132,327 @@ class ObserverImpl implements Observer {
 
 Loose Coupling 디자인을 활용하면 변경사항이 생겨도 무난히 처리할 수 있는 유연한 객체지향 시스템을 구축할 수 있습니다. 객체 사이의 상호의존성을 최소화 할 수 있기 때문이죠.
 
+---
+### 4. 날씨 앱 설계
+
+**1. Subject 인터페이스를 구현하여 WeatherData를 주제객체로 만들었습니다.**
+```java
+interface Subject {
+	registerObserver()
+	removeObserver()
+	notifyObserver()
+}
+
+class WeatherData implements Subject {
+	registerObserver()
+	removeObserver()
+	notifyObserver()
+    
+	getTemperature()
+	getHumidity()
+	getPressure()
+	measurementsChanged()
+}
+```
+
+**2. `현재날씨, 날씨예보, 기상통계` 화면에서 구현해야 할 인터페이스를 정의합시다.**
+```java
+interface Observer {
+	update() // 새로 갱신된 주제 데이터를 전달하는 인터페이스
+}
+
+interface DisplayElement {
+	display() // 화면에 표현시키는 인터페이스
+}
+```
+
+**3. 위 인터페이스를 구현한 `현재날씨, 날씨예보, 기상통계` 클래스를 만듭니다.**
+```java
+class CurrentWeather implements Observer, DisplayElement{
+	update()
+	display() { // 현재 측정 값을 화면에 표시 }
+}
+
+class ForcastWeather implements Observer, DisplayElement{
+	update()
+	display() { // 날씨 예보 표시 }
+}
+
+class StatisticsDisplay implements Observer, DisplayElement{
+	update()
+	display() { // 평균 기온, 평균 습도 등 표시 }
+}
+```
+
+**4. 만약 새로운 화면 `불쾌지수` 화면을 만든다고 한다면 쉽게 추가할 수 있겠죠?**
+```java
+class DiscomfortDisplay implements Observer, DisplayElement{
+	update()
+	display() { // 불쾌지수를 화면에 표시 }
+}
+```
+
+---
+ ### 5. 실제 구현
+ 실제 구현된 자바코드는 다음과 같습니다. 별도의 설명을 추가하진 않겠습니다. 
+ 
+ ```java
+ public interface Subject {
+	public void registerObserver(Observer o);
+	public void removeObserver(Observer o);
+	public void notifyObservers();
+}
+
+public interface Observer {
+	public void update(float temp, float humidity, float pressure);
+}
+
+public interface DisplayElement {
+	public void display();
+}
+ ```
+ 
+ ```java
+ public class WeatherData implements Subject {
+	private List<Observer> observers;
+	private float temperature;
+	private float humidity;
+	private float pressure;
+	
+	public WeatherData() {
+		observers = new ArrayList<Observer>();
+	}
+	
+	public void registerObserver(Observer o) {
+		observers.add(o);
+	}
+	
+	public void removeObserver(Observer o) {
+		observers.remove(o);
+	}
+	
+	public void notifyObservers() {
+		for (Observer observer : observers) {
+			observer.update(temperature, humidity, pressure);
+		}
+	}
+	
+	public void measurementsChanged() {
+		notifyObservers();
+	}
+	
+	public void setMeasurements(float temperature, float humidity, float pressure) {
+		this.temperature = temperature;
+		this.humidity = humidity;
+		this.pressure = pressure;
+		measurementsChanged();
+	}
+
+	public float getTemperature() {
+		return temperature;
+	}
+	
+	public float getHumidity() {
+		return humidity;
+	}
+	
+	public float getPressure() {
+		return pressure;
+	}
+
+}
+ ```
+
+```java
+public class CurrentConditionsDisplay implements Observer, DisplayElement {
+	private float temperature;
+	private float humidity;
+	private WeatherData weatherData;
+	
+	public CurrentConditionsDisplay(WeatherData weatherData) {
+		this.weatherData = weatherData;
+		weatherData.registerObserver(this);
+	}
+	
+	public void update(float temperature, float humidity, float pressure) {
+		this.temperature = temperature;
+		this.humidity = humidity;
+		display();
+	}
+	
+	public void display() {
+		System.out.println("Current conditions: " + temperature 
+			+ "F degrees and " + humidity + "% humidity");
+	}
+}
+
+```
+
+```java
+public class ForecastDisplay implements Observer, DisplayElement {
+	private float currentPressure = 29.92f;  
+	private float lastPressure;
+	private WeatherData weatherData;
+
+	public ForecastDisplay(WeatherData weatherData) {
+		this.weatherData = weatherData;
+		weatherData.registerObserver(this);
+	}
+
+	public void update(float temp, float humidity, float pressure) {
+        lastPressure = currentPressure;
+		currentPressure = pressure;
+
+		display();
+	}
+
+	public void display() {
+		System.out.print("Forecast: ");
+		if (currentPressure > lastPressure) {
+			System.out.println("Improving weather on the way!");
+		} else if (currentPressure == lastPressure) {
+			System.out.println("More of the same");
+		} else if (currentPressure < lastPressure) {
+			System.out.println("Watch out for cooler, rainy weather");
+		}
+	}
+}
+```
+
+```java
+public class StatisticsDisplay implements Observer, DisplayElement {
+	private float maxTemp = 0.0f;
+	private float minTemp = 200;
+	private float tempSum= 0.0f;
+	private int numReadings;
+	private WeatherData weatherData;
+
+	public StatisticsDisplay(WeatherData weatherData) {
+		this.weatherData = weatherData;
+		weatherData.registerObserver(this);
+	}
+
+	public void update(float temp, float humidity, float pressure) {
+		tempSum += temp;
+		numReadings++;
+
+		if (temp > maxTemp) {
+			maxTemp = temp;
+		}
+ 
+		if (temp < minTemp) {
+			minTemp = temp;
+		}
+
+		display();
+	}
+
+	public void display() {
+		System.out.println("Avg/Max/Min temperature = " + (tempSum / numReadings)
+			+ "/" + maxTemp + "/" + minTemp);
+	}
+}
+```
+
+**`현재날씨, 날씨예보, 기상통계` 화면을 불러오는 메인함수입니다.**
+```java
+public class WeatherStation {
+
+	public static void main(String[] args) {
+		WeatherData weatherData = new WeatherData();
+	
+		CurrentConditionsDisplay currentDisplay = 
+			new CurrentConditionsDisplay(weatherData);
+		StatisticsDisplay statisticsDisplay = new StatisticsDisplay(weatherData);
+		ForecastDisplay forecastDisplay = new ForecastDisplay(weatherData);
+
+		weatherData.setMeasurements(80, 65, 30.4f);
+		weatherData.setMeasurements(82, 70, 29.2f);
+		weatherData.setMeasurements(78, 90, 29.2f);
+		
+		weatherData.removeObserver(forecastDisplay);
+		weatherData.setMeasurements(62, 90, 28.1f);
+	}
+}
+```
+> 위 코드에 대한 자세한 설명은 Head first Design Patterns 책 p95를 보시기 바랍니다~~(광고 아님)~~
+
+---
+### 6. 한 걸음 더 - 자바 내장 옵저버 패턴 사용하기
+#### 1) 자바 내장 옵저버 라이브러리로 설계하기
+지금까지 우리는 옵저버 패턴을 직접 구현해서 사용했습니다. 하지만 자바에서 자체적으로 옵저버 패턴을 지원하는 라이브러리가 있습니다. Observer 인터페이스와 Observable 클래스인데요. 이들은 우리가 만들었던 Subject와 Observer 인터페이스와 꽤 비슷하지만, 더 많은 기능을 제공합니다. 예를들면 갱신방식을 pull혹은 push로 선택 할 수 있죠.
+
+Observer 인터페이스와 Observable 클래스로 날씨앱을 새로 디자인해봅시다!
+
+**1. Observable 클래스를 상속하여 WeatherData를 주제객체로 만듭니다.**
+```java
+class Observable { // 이미 자바에서 제공하는 Observable에 다양한 메소드들이 있군요
+	addObserver()
+	deleteObserver()
+	notifyObserver()
+	setChanged()
+}
+
+class WeatherData extends Observable { 
+// Observable를 상속했으므로 옵저버 관리 메소드를 직접 구현하지 않아도 됩니다.
+	getTemperature()
+	getHumidity()
+	getPressure()
+	measurementsChanged()
+}
+```
+
+**2. Observer 인터페이스를 구현하여 `현재날씨, 날씨예보, 기상통계` 클래스를 만듭니다. 이 부분은 이전에 했던 방법과 똑같군요!**
+```java
+interface Observer { 
+	update()
+}
+
+class CurrentWeather implements Observer, DisplayElement{
+	update()
+	display() 
+}
+
+class ForcastWeather implements Observer, DisplayElement{
+	update()
+	display() 
+}
+
+class StatisticsDisplay implements Observer, DisplayElement{
+	update()
+	display() 
+}
+```
+
+#### 2) 자바 내장 옵저버 패턴 작동 방식
+Observable 은 클래스이기 때문에 `extends`를 통해 `addObserver()`, `deleteObserver()`와 같은 옵저버들을 관리하는 메소드들을 상속받습니다.
+
+**1. 옵저버를 만드는 방법**
+옵저버로 등록하려는 클래스에 java.util.Observer 인터페이스를 구현하고 구독하려는 Observable 객체의 `addObserver()`메소드를 호출하면 됩니다.
+
+**2. Observable 객체가 연락을 돌리는 방법**
+Observable를 상속받은 주제객체는 `setChanged()` 메소드를 호출해서 객체의 상태가 바뀌었다는 것을 알립니다. 그리고 `notifyObservers()` 혹은 `notifyObservers(Object arg)`를 호출합니다.
+
+> 보충설명
+- `setChanged()`를 하지 않으면 `notifyObservers()`를 하여도 옵저버에게 연락이 가지 않습니다. `setChanged()` 가 일종의 필터 역할을 하는 것이지요. 예를들어 센서가 1단위로 자주 움직인다고 합시다. 바뀔 때마다 연락이간다면 비효율적입니다. 따라서 5단위 이상 바뀔때만 연락이 갈 수 있게끔 중간다리 역할을 하는게 `setChanged()`입니다.
+- `notifyObservers(Object arg)` 는 옵저버들에게 임의의 Object를 전달합니다.
+
+**3. 옵저버가 연락을 받는 방법**
+옵저버에게 데이터를 보낼 때는 `notifyObservers(arg)` 처럼 인자로 전달합니다. 즉 푸쉬 방식이구요. 반대로 옵저버쪽에서 Observable 객체로부터 원하는 데이터를 가져가는 풀방식도 있습니다.
+
+#### 3) 자바 내장 옵저버의 단점
+
+**1. Observable은 클래스이다**
+인터페이스가 아니기 때문에 주제로 할 객체를 서브클래스로 만들 수 밖에 없습니다. 만약 이미 다른 수퍼클래스가 있다면 사용을 할 수 없는 것이죠. 인터페이스가 없다는 것은 해당 라이브러리를 커스텀하여 사용할 수 없다는 점도 있습니다.
+
+**2. Observable API는 Protected로 선언되었다**
+`setChanged()` 메소드를 보면 Protected 선언이 되어있습니다. 즉 Observable의 서브클래스에서만 `setChanged()`를 호출할 수 있죠. 즉 Observable를 구현한 주제객체를 다른 패키지에서 인스턴스변수로 써먹을 수 없습니다. 이런 디자인은 상속보다는 구성을 사용한다는 디자인 원칙에도 위배됩니다.
+
+
+만약 이런 단점들이 설계에 크게 영향을 미치지 않는다면 자바 내장 옵저버를 쓰는 방법도 괜찮습니다. 여의치 않다면 처음 했던 방법처럼 직접 인터페이스를 구현하는 방법을 쓰면 됩니다. 결국 중요한 건 패턴을 활용한다는 것이니까요.
+
+이상 옵저버 패턴에 대한 설명이었습니다.
+다음엔 데코레이터 패턴을 소개하겠습니다 ^^
+
+>
+[(이전 게시물) 1. 스트래티지 패턴 개념과 예제 (strategy pattern)](https://velog.io/@hanna2100/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8C%A8%ED%84%B4-1.-%EC%8A%A4%ED%8A%B8%EB%9E%98%ED%8B%B0%EC%A7%80-%ED%8C%A8%ED%84%B4-strategy-pattern)
